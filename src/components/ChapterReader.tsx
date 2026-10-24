@@ -17,30 +17,6 @@ export const ChapterReader: React.FC = () => {
   const [isNarrating, setIsNarrating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [persona, setPersona] = useState<'unhinged' | 'engineer' | 'robot'>('unhinged');
-  const [isContinuous, setIsContinuous] = useState(false);
-  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
-
-  // Auto-advance to next chapter if continuous mode is active
-  const onAudioEnded = () => {
-    if (isContinuous && selectedChapterNum < 12) {
-      soundEngine.playClick();
-      setShouldAutoPlay(true);
-      const nextChapter = selectedChapterNum + 1;
-      setSelectedChapterNum(nextChapter);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      setShouldAutoPlay(false);
-    }
-  };
-
-  // Trigger narration automatically when chapter changes if auto-play is enabled
-  useEffect(() => {
-    if (shouldAutoPlay) {
-      handleNarrate();
-    }
-  }, [selectedChapterNum]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -96,8 +72,8 @@ export const ChapterReader: React.FC = () => {
     setIsNarrating(true);
     setAudioUrl(null);
     try {
-      const summaryText = currentChapter.content.slice(0, 4).join(' ');
-      const audioData = await narrateWithElon(summaryText, persona);
+      const summaryText = currentChapter.content.slice(0, 3).join(' ');
+      const audioData = await narrateWithElon(summaryText);
       if (audioData) {
         const binary = atob(audioData);
         const bytes = new Uint8Array(binary.length);
@@ -107,11 +83,8 @@ export const ChapterReader: React.FC = () => {
         const blob = new Blob([bytes], { type: 'audio/wav' });
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
-        // Play audio automatically
-        if (audioRef.current) {
-          audioRef.current.src = url;
-          audioRef.current.play();
-        }
+        const audio = new Audio(url);
+        audio.play();
       }
     } catch (err: any) {
       console.error('TTS error:', err);
@@ -227,62 +200,19 @@ export const ChapterReader: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1 font-bold">Narration Personality</span>
-              <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
-                {(['unhinged', 'engineer', 'robot'] as const).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => {
-                      soundEngine.playClick();
-                      setPersona(p);
-                    }}
-                    title={p === 'unhinged' ? 'The Unhinged Billionaire' : p === 'engineer' ? 'The Rational Engineer' : 'The Bored Robot'}
-                    className={`px-3 py-1.5 text-[10px] font-mono rounded-md transition-all uppercase ${
-                      persona === p
-                        ? 'bg-emerald-500 text-slate-950 font-bold shadow-lg shadow-emerald-500/20'
-                        : 'text-slate-500 hover:text-slate-300'
-                    }`}
-                  >
-                    {p === 'unhinged' ? 'Chaos' : p === 'engineer' ? 'Logic' : 'Droid'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1 font-bold">Flow Control</span>
-              <button
-                onClick={() => {
-                  soundEngine.playClick();
-                  setIsContinuous(!isContinuous);
-                }}
-                className={`px-3 py-2 rounded-lg border text-[10px] font-mono font-bold transition-all ${
-                  isContinuous
-                    ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 shadow-inner'
-                    : 'bg-slate-800/50 border-slate-700 text-slate-500'
-                }`}
-              >
-                {isContinuous ? 'AUTO-ADVANCE: ON' : 'AUTO-ADVANCE: OFF'}
-              </button>
-            </div>
-
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => {
-                setShouldAutoPlay(false);
-                handleNarrate();
-              }}
+              onClick={handleNarrate}
               disabled={isNarrating}
-              className="px-5 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm h-10 mt-4 sm:mt-0"
+              className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
             >
-              <Volume2 className={`w-4 h-4 text-emerald-400 ${isNarrating ? 'animate-bounce' : 'animate-pulse'}`} />
-              {isNarrating ? 'STREAMING...' : 'PLAY NARRATION'}
+              <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
+              {isNarrating ? 'Synthesizing Elon Voice...' : 'Narrate Chapter (Elon Voice)'}
             </button>
 
             <button
               onClick={() => toggleBookmark(currentChapter.number)}
-              className={`p-2.5 rounded-xl border transition-all h-10 mt-4 sm:mt-0 ${
+              className={`p-2.5 rounded-xl border transition-all ${
                 bookmarks.includes(currentChapter.number)
                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
                   : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -293,28 +223,18 @@ export const ChapterReader: React.FC = () => {
           </div>
         </div>
 
-        {/* Hidden Audio Element for flow control */}
-        <audio 
-          ref={audioRef} 
-          onEnded={onAudioEnded}
-          style={{ display: 'none' }}
-        />
-
         {audioUrl && (
-          <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-md animate-in fade-in duration-500">
+          <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 animate-pulse">
                 <Volume2 className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-xs font-mono font-bold text-emerald-300 block uppercase">{persona} VOICE READY</span>
-                <span className="text-[10px] font-mono text-slate-400">Neural data stream active</span>
+                <span className="text-xs font-mono font-bold text-emerald-300 block">ELON VOICE NARRATION READY</span>
+                <span className="text-[10px] font-mono text-slate-400">Includes dramatic pauses & satirical commentary</span>
               </div>
             </div>
-            <audio controls src={audioUrl} className="h-10 accent-emerald-500" ref={(el) => {
-              // Sync the UI audio element's onEnded too just in case
-              if (el) el.onended = onAudioEnded;
-            }} />
+            <audio controls src={audioUrl} className="h-10 accent-emerald-500" />
           </div>
         )}
 

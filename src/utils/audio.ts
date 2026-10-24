@@ -7,12 +7,8 @@
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
-  private thrusterNode: AudioBufferSourceNode | null = null;
-  private filterNode: BiquadFilterNode | null = null;
-  private gainNode: GainNode | null = null;
+  private thrusterNode: AudioNode | null = null;
   private isThrusterActive = false;
-  private masterVolume = 0.15;
-  private intensity = 300;
 
   private init() {
     if (!this.ctx) {
@@ -69,26 +65,13 @@ class SoundEngine {
     }
   }
 
-  setAmbientVolume(vol: number) {
-    this.masterVolume = vol;
-    if (this.gainNode) {
-      this.gainNode.gain.setTargetAtTime(vol, this.ctx?.currentTime || 0, 0.1);
-    }
-  }
-
-  setAmbientIntensity(freq: number) {
-    this.intensity = freq;
-    if (this.filterNode) {
-      this.filterNode.frequency.setTargetAtTime(freq, this.ctx?.currentTime || 0, 0.2);
-    }
-  }
-
   toggleThruster(active: boolean) {
     try {
       this.init();
       if (!this.ctx) return;
 
       if (active && !this.isThrusterActive) {
+        // Create white noise buffer for rocket thruster
         const bufferSize = this.ctx.sampleRate * 2;
         const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -102,10 +85,10 @@ class SoundEngine {
 
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(this.intensity, this.ctx.currentTime);
+        filter.frequency.setValueAtTime(300, this.ctx.currentTime);
 
         const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(this.masterVolume, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
 
         noise.connect(filter);
         filter.connect(gain);
@@ -113,14 +96,10 @@ class SoundEngine {
 
         noise.start();
         this.thrusterNode = noise;
-        this.filterNode = filter;
-        this.gainNode = gain;
         this.isThrusterActive = true;
       } else if (!active && this.isThrusterActive && this.thrusterNode) {
-        this.thrusterNode.stop();
+        (this.thrusterNode as AudioBufferSourceNode).stop();
         this.thrusterNode = null;
-        this.filterNode = null;
-        this.gainNode = null;
         this.isThrusterActive = false;
       }
     } catch {
@@ -130,4 +109,3 @@ class SoundEngine {
 }
 
 export const soundEngine = new SoundEngine();
-
