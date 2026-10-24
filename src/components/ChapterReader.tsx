@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CHAPTERS, Chapter } from '../data/chapters';
-import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, Sparkles, ShieldAlert } from 'lucide-react';
+import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, Sparkles, ShieldAlert, Check } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 import { narrateWithElon } from '../utils/ai';
 
@@ -17,6 +17,10 @@ export const ChapterReader: React.FC = () => {
   const [isNarrating, setIsNarrating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
+  const [isContinuousPlaying, setIsContinuousPlaying] = useState<boolean>(false);
+
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,11 +39,10 @@ export const ChapterReader: React.FC = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // Initial calculation
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [selectedChapterNum]); // Re-calculate on chapter change
+  }, [selectedChapterNum]);
 
   useEffect(() => {
     const saved = localStorage.getItem('elon_book_bookmarks');
@@ -49,6 +52,10 @@ export const ChapterReader: React.FC = () => {
       } catch {
         // parsing error fallback
       }
+    }
+    const savedAuto = localStorage.getItem('elon_auto_advance');
+    if (savedAuto !== null) {
+      setAutoAdvance(savedAuto === 'true');
     }
   }, []);
 
@@ -66,13 +73,21 @@ export const ChapterReader: React.FC = () => {
 
   const currentChapter: Chapter = CHAPTERS.find((c) => c.number === selectedChapterNum) || CHAPTERS[0];
 
-  const handleNarrate = async () => {
+  const handleNarrate = async (targetChapter?: Chapter) => {
     soundEngine.playClick();
     if (isNarrating) return;
     setIsNarrating(true);
     setAudioUrl(null);
+
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+    }
+
+    const chapterToNarrate = targetChapter || currentChapter;
+
     try {
-      const summaryText = currentChapter.content.slice(0, 3).join(' ');
+      const summaryText = chapterToNarrate.content.slice(0, 3).join(' ');
       const audioData = await narrateWithElon(summaryText);
       if (audioData) {
         const binary = atob(audioData);
@@ -83,14 +98,55 @@ export const ChapterReader: React.FC = () => {
         const blob = new Blob([bytes], { type: 'audio/wav' });
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
+
         const audio = new Audio(url);
-        audio.play();
+        activeAudioRef.current = audio;
+
+        audio.onended = () => {
+          if (autoAdvance && isContinuousPlaying) {
+            if (chapterToNarrate.number < 12) {
+              setSelectedChapterNum(chapterToNarrate.number + 1);
+            } else {
+              setIsContinuousPlaying(false);
+            }
+          }
+        };
+
+        await audio.play();
       }
     } catch (err: any) {
       console.error('TTS error:', err);
+      setIsContinuousPlaying(false);
       alert(`[SYSTEM ERROR]: ${err.message || "TTS service unavailable."} Note: TTS requires a backend and may not work on static hosting.`);
     } finally {
       setIsNarrating(false);
+    }
+  };
+
+  // Trigger narration automatically when continuous playing and chapter changes
+  useEffect(() => {
+    if (isContinuousPlaying && selectedChapterNum <= 12) {
+      handleNarrate(currentChapter);
+    }
+  }, [selectedChapterNum, isContinuousPlaying]);
+
+  const handleNarrateAll = () => {
+    soundEngine.playClick();
+    setAutoAdvance(true);
+    setIsContinuousPlaying(true);
+    if (selectedChapterNum !== 1) {
+      setSelectedChapterNum(1);
+    } else {
+      handleNarrate(CHAPTERS[0]);
+    }
+  };
+
+  const stopContinuous = () => {
+    soundEngine.playClick();
+    setIsContinuousPlaying(false);
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
     }
   };
 
@@ -200,15 +256,46 @@ export const ChapterReader: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 cursor-pointer bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 text-xs font-mono text-slate-300">
+              <input
+                type="checkbox"
+                checked={autoAdvance}
+                onChange={(e) => {
+                  setAutoAdvance(e.target.checked);
+                  localStorage.setItem('elon_auto_advance', String(e.target.checked));
+                }}
+                className="accent-cyan-400 w-3.5 h-3.5 rounded"
+              />
+              <span>Auto-Advance</span>
+            </label>
+
             <button
-              onClick={handleNarrate}
+              onClick={() => handleNarrate()}
               disabled={isNarrating}
               className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
             >
               <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
-              {isNarrating ? 'Synthesizing Elon Voice...' : 'Narrate Chapter (Elon Voice)'}
+              {isNarrating && !isContinuousPlaying ? 'Synthesizing...' : 'Narrate Chapter'}
             </button>
+
+            {isContinuousPlaying ? (
+              <button
+                onClick={stopContinuous}
+                className="px-4 py-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
+              >
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                Stop Narrate All (1-12)
+              </button>
+            ) : (
+              <button
+                onClick={handleNarrateAll}
+                className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
+              >
+                <Play className="w-4 h-4 text-cyan-400" />
+                Narrate All (1-12)
+              </button>
+            )}
 
             <button
               onClick={() => toggleBookmark(currentChapter.number)}
@@ -230,7 +317,9 @@ export const ChapterReader: React.FC = () => {
                 <Volume2 className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-xs font-mono font-bold text-emerald-300 block">ELON VOICE NARRATION READY</span>
+                <span className="text-xs font-mono font-bold text-emerald-300 block">
+                  {isContinuousPlaying ? `NARRATING CHAPTER ${selectedChapterNum} (AUTO-ADVANCING)` : 'ELON VOICE NARRATION READY'}
+                </span>
                 <span className="text-[10px] font-mono text-slate-400">Includes dramatic pauses & satirical commentary</span>
               </div>
             </div>
@@ -270,7 +359,6 @@ export const ChapterReader: React.FC = () => {
             }`}
           >
             {currentChapter.content.map((paragraph, idx) => {
-              // Highlight math equations if any
               const isMath = paragraph.includes('=') && (paragraph.includes('/') || paragraph.includes('^') || paragraph.includes('-'));
               if (isMath) {
                 return (

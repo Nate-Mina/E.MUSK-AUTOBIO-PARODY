@@ -10,6 +10,15 @@ class SoundEngine {
   private thrusterNode: AudioNode | null = null;
   private isThrusterActive = false;
 
+  // Ambient SpaceX launch soundscape state
+  private ambientGain: GainNode | null = null;
+  private ambientFilter: BiquadFilterNode | null = null;
+  private ambientSource: AudioBufferSourceNode | null = null;
+  private ambientSubOsc: OscillatorNode | null = null;
+  private isAmbientActive = false;
+  private currentVolume = 0.3;
+  private currentIntensity = 1.0;
+
   private init() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -71,7 +80,6 @@ class SoundEngine {
       if (!this.ctx) return;
 
       if (active && !this.isThrusterActive) {
-        // Create white noise buffer for rocket thruster
         const bufferSize = this.ctx.sampleRate * 2;
         const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -104,6 +112,106 @@ class SoundEngine {
       }
     } catch {
       // Audio context error handling
+    }
+  }
+
+  // SpaceX Launch Ambient Soundscape Controller
+  startAmbientLaunch(volume = 0.3, intensity = 1.0) {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      if (this.isAmbientActive) {
+        this.updateAmbient(volume, intensity);
+        return;
+      }
+
+      this.currentVolume = volume;
+      this.currentIntensity = intensity;
+
+      // 1. White/Pink Noise Buffer for rocket roar
+      const bufferSize = this.ctx.sampleRate * 5;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        // Pink noise approximation for realistic rocket rumble
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        data[i] = (b0 + b1 + b2 + white * 0.5362) * 0.11;
+      }
+
+      const source = this.ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(150 * intensity, this.ctx.currentTime);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(volume * intensity, this.ctx.currentTime);
+
+      // Sub-bass rumble oscillator
+      const subOsc = this.ctx.createOscillator();
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(45 * intensity, this.ctx.currentTime);
+      const subGain = this.ctx.createGain();
+      subGain.gain.setValueAtTime(volume * 0.5 * intensity, this.ctx.currentTime);
+
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      subOsc.connect(subGain);
+      subGain.connect(this.ctx.destination);
+
+      source.start();
+      subOsc.start();
+
+      this.ambientSource = source;
+      this.ambientSubOsc = subOsc;
+      this.ambientFilter = filter;
+      this.ambientGain = gain;
+      this.isAmbientActive = true;
+    } catch {
+      // Audio context handling
+    }
+  }
+
+  updateAmbient(volume: number, intensity: number) {
+    try {
+      this.currentVolume = volume;
+      this.currentIntensity = intensity;
+      if (!this.ctx || !this.isAmbientActive) return;
+
+      if (this.ambientFilter) {
+        this.ambientFilter.frequency.setTargetAtTime(150 * intensity, this.ctx.currentTime, 0.5);
+      }
+      if (this.ambientGain) {
+        this.ambientGain.gain.setTargetAtTime(volume * intensity, this.ctx.currentTime, 0.5);
+      }
+    } catch {
+      // Audio update handling
+    }
+  }
+
+  stopAmbientLaunch() {
+    try {
+      if (this.ambientSource) {
+        this.ambientSource.stop();
+        this.ambientSource.disconnect();
+        this.ambientSource = null;
+      }
+      if (this.ambientSubOsc) {
+        this.ambientSubOsc.stop();
+        this.ambientSubOsc.disconnect();
+        this.ambientSubOsc = null;
+      }
+      this.isAmbientActive = false;
+    } catch {
+      // Audio stop handling
     }
   }
 }
