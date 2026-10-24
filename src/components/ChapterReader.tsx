@@ -19,22 +19,28 @@ export const ChapterReader: React.FC = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [persona, setPersona] = useState<'unhinged' | 'engineer' | 'robot'>('unhinged');
   const [isContinuous, setIsContinuous] = useState(false);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   // Auto-advance to next chapter if continuous mode is active
   const onAudioEnded = () => {
     if (isContinuous && selectedChapterNum < 12) {
       soundEngine.playClick();
+      setShouldAutoPlay(true);
       const nextChapter = selectedChapterNum + 1;
       setSelectedChapterNum(nextChapter);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      // Small delay to allow state update and scroll before next narration
-      setTimeout(() => {
-        const btn = document.getElementById('narrate-btn');
-        if (btn) btn.click();
-      }, 1000);
+    } else {
+      setShouldAutoPlay(false);
     }
   };
+
+  // Trigger narration automatically when chapter changes if auto-play is enabled
+  useEffect(() => {
+    if (shouldAutoPlay) {
+      handleNarrate();
+    }
+  }, [selectedChapterNum]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -223,7 +229,7 @@ export const ChapterReader: React.FC = () => {
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Narration Persona</span>
+              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1 font-bold">Narration Personality</span>
               <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
                 {(['unhinged', 'engineer', 'robot'] as const).map((p) => (
                   <button
@@ -233,9 +239,9 @@ export const ChapterReader: React.FC = () => {
                       setPersona(p);
                     }}
                     title={p === 'unhinged' ? 'The Unhinged Billionaire' : p === 'engineer' ? 'The Rational Engineer' : 'The Bored Robot'}
-                    className={`px-2 py-1 text-[10px] font-mono rounded transition-all uppercase ${
+                    className={`px-3 py-1.5 text-[10px] font-mono rounded-md transition-all uppercase ${
                       persona === p
-                        ? 'bg-emerald-500 text-slate-950 font-bold'
+                        ? 'bg-emerald-500 text-slate-950 font-bold shadow-lg shadow-emerald-500/20'
                         : 'text-slate-500 hover:text-slate-300'
                     }`}
                   >
@@ -246,15 +252,15 @@ export const ChapterReader: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Continuous Play</span>
+              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1 font-bold">Flow Control</span>
               <button
                 onClick={() => {
                   soundEngine.playClick();
                   setIsContinuous(!isContinuous);
                 }}
-                className={`px-3 py-2 rounded-lg border text-[10px] font-mono transition-all ${
+                className={`px-3 py-2 rounded-lg border text-[10px] font-mono font-bold transition-all ${
                   isContinuous
-                    ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
+                    ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 shadow-inner'
                     : 'bg-slate-800/50 border-slate-700 text-slate-500'
                 }`}
               >
@@ -263,13 +269,15 @@ export const ChapterReader: React.FC = () => {
             </div>
 
             <button
-              id="narrate-btn"
-              onClick={handleNarrate}
+              onClick={() => {
+                setShouldAutoPlay(false);
+                handleNarrate();
+              }}
               disabled={isNarrating}
-              className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm h-10 mt-4 sm:mt-0"
+              className="px-5 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm h-10 mt-4 sm:mt-0"
             >
               <Volume2 className={`w-4 h-4 text-emerald-400 ${isNarrating ? 'animate-bounce' : 'animate-pulse'}`} />
-              {isNarrating ? 'SYNTHESIZING...' : 'START NARRATION'}
+              {isNarrating ? 'STREAMING...' : 'PLAY NARRATION'}
             </button>
 
             <button
