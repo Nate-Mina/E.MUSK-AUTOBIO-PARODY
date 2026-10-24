@@ -293,45 +293,51 @@ export const ChapterReader: React.FC = () => {
             })}
           </div>
 
-          {/* Chapter Navigation Footer */}
-          <div className="mt-12 pt-6 border-t border-slate-800 flex items-center justify-between">
-            <button
-              onClick={() => {
-                if (selectedChapterNum > 1) {
+          {/* Chapter Navigation Control Bar */}
+          <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-stretch justify-between gap-4">
+            {/* Previous Chapter Link */}
+            {selectedChapterNum > 1 ? (
+              <button
+                onClick={() => {
                   soundEngine.playClick();
                   setSelectedChapterNum(selectedChapterNum - 1);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-              }}
-              disabled={selectedChapterNum === 1}
-              className={`px-4 py-2 rounded-xl text-xs font-mono flex items-center gap-2 transition-all ${
-                selectedChapterNum === 1
-                  ? 'opacity-40 cursor-not-allowed bg-slate-950 text-slate-600'
-                  : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous Chapter
-            </button>
+                }}
+                className="flex-1 group flex items-center gap-4 p-4 rounded-2xl bg-slate-950/40 border border-slate-800/60 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all text-left"
+              >
+                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-500 group-hover:text-cyan-400 border border-slate-800 transition-colors shrink-0">
+                  <ChevronLeft className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Previous Chapter</div>
+                  <div className="text-sm font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors truncate">
+                    {CHAPTERS.find(c => c.number === selectedChapterNum - 1)?.title}
+                  </div>
+                </div>
+              </button>
+            ) : <div className="flex-1" />}
 
-            <button
-              onClick={() => {
-                if (selectedChapterNum < 12) {
+            {/* Next Chapter Link */}
+            {selectedChapterNum < 12 ? (
+              <button
+                onClick={() => {
                   soundEngine.playClick();
                   setSelectedChapterNum(selectedChapterNum + 1);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-              }}
-              disabled={selectedChapterNum === 12}
-              className={`px-4 py-2 rounded-xl text-xs font-mono flex items-center gap-2 transition-all ${
-                selectedChapterNum === 12
-                  ? 'opacity-40 cursor-not-allowed bg-slate-950 text-slate-600'
-                  : 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30'
-              }`}
-            >
-              Next Chapter
-              <ChevronRight className="w-4 h-4" />
-            </button>
+                }}
+                className="flex-1 group flex items-center justify-end gap-4 p-4 rounded-2xl bg-slate-950/40 border border-slate-800/60 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all text-right"
+              >
+                <div className="min-w-0">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Next Chapter</div>
+                  <div className="text-sm font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors truncate">
+                    {CHAPTERS.find(c => c.number === selectedChapterNum + 1)?.title}
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-500 group-hover:text-cyan-400 border border-slate-800 transition-colors shrink-0">
+                  <ChevronRight className="w-6 h-6" />
+                </div>
+              </button>
+            ) : <div className="flex-1" />}
           </div>
         </article>
       </div>
