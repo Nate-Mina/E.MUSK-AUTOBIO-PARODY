@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { CHAPTERS, Chapter } from '../data/chapters';
 import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, Sparkles, ShieldAlert } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
+import { narrateWithElon } from '../utils/ai';
 
 export const ChapterReader: React.FC = () => {
   const [selectedChapterNum, setSelectedChapterNum] = useState<number>(1);
@@ -72,14 +73,9 @@ export const ChapterReader: React.FC = () => {
     setAudioUrl(null);
     try {
       const summaryText = currentChapter.content.slice(0, 3).join(' ');
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: summaryText, voiceName: 'Fenrir' }),
-      });
-      const data = await res.json();
-      if (data.audio) {
-        const binary = atob(data.audio);
+      const audioData = await narrateWithElon(summaryText);
+      if (audioData) {
+        const binary = atob(audioData);
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) {
           bytes[i] = binary.charCodeAt(i);
@@ -90,8 +86,9 @@ export const ChapterReader: React.FC = () => {
         const audio = new Audio(url);
         audio.play();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('TTS error:', err);
+      alert(`[SYSTEM ERROR]: ${err.message || "TTS service unavailable."} Note: TTS requires a backend and may not work on static hosting.`);
     } finally {
       setIsNarrating(false);
     }

@@ -1,11 +1,7 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, AlertCircle } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
+import { chatWithElon } from '../utils/ai';
 
 interface Message {
   role: 'user' | 'model';
@@ -34,25 +30,17 @@ export const ElonAIChat: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
-      });
-      const data = await res.json();
-      if (data.text) {
-        setMessages([...newMessages, { role: 'model', content: data.text }]);
+      const reply = await chatWithElon(newMessages);
+      if (reply) {
+        setMessages([...newMessages, { role: 'model', content: reply }]);
       } else {
-        setMessages([
-          ...newMessages,
-          { role: 'model', content: "Error in telemetry packet parsing. My server cluster is currently optimizing Mars propellant flow." },
-        ]);
+        throw new Error("No response");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Chat error:', err);
       setMessages([
         ...newMessages,
-        { role: 'model', content: "Network bottleneck detected. A legacy union bureaucrat must have unplugged the server rack." },
+        { role: 'model', content: `[SYSTEM ERROR]: ${err.message || "Network bottleneck detected."} If on static hosting, ensure VITE_GEMINI_API_KEY is configured.` },
       ]);
     } finally {
       setLoading(false);
