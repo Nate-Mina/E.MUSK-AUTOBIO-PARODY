@@ -15,6 +15,30 @@ export const ChapterReader: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [isNarrating, setIsNarrating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const scrollY = window.scrollY;
+      
+      const scrollableHeight = documentHeight - windowHeight;
+      if (scrollableHeight <= 0) {
+        setScrollProgress(100);
+        return;
+      }
+      
+      const progress = Math.min(100, Math.max(0, (scrollY / scrollableHeight) * 100));
+      setScrollProgress(Math.round(progress));
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    // Initial calculation
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [selectedChapterNum]); // Re-calculate on chapter change
 
   useEffect(() => {
     const saved = localStorage.getItem('elon_book_bookmarks');
@@ -82,6 +106,17 @@ export const ChapterReader: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      {/* Scroll Progress Bar (Fixed below Navbar) */}
+      <div className="fixed top-[73px] left-0 w-full h-1 bg-slate-900/40 z-40 pointer-events-none overflow-hidden">
+        <div 
+          className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-all duration-150 ease-out"
+          style={{ width: `${scrollProgress}%` }}
+        />
+        <div className="absolute top-2 right-4 text-[10px] font-mono text-cyan-400 bg-[#090d16]/80 px-2 py-0.5 rounded border border-cyan-900/40 backdrop-blur-sm shadow-lg">
+          {scrollProgress}% READ
+        </div>
+      </div>
+
       {/* Sidebar Navigation */}
       <div className="lg:col-span-1 space-y-4">
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 backdrop-blur-md sticky top-24">
