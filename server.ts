@@ -68,7 +68,7 @@ app.post('/api/chat', async (req, res) => {
 // API: TTS Audio Generation
 app.post('/api/tts', async (req, res) => {
   try {
-    const { text, voiceName = 'Fenrir' } = req.body;
+    const { text, persona = 'unhinged' } = req.body;
     if (!text) {
       return res.status(400).json({ error: 'Text is required for TTS' });
     }
@@ -78,8 +78,24 @@ app.post('/api/tts', async (req, res) => {
       return res.status(500).json({ error: 'Server misconfigured: Gemini API Key missing from environment.' });
     }
 
-    // Enhance text with satirical Elon commentary, breath pauses, and vocal bursts
-    const enrichedText = `Elon: <breath> First principles analysis. <laugh> Absolutely staggering throughput. ${text} |mhm| total legacy NPC filter removal. <gasp> Pure genius.`;
+    let enrichedText = text;
+    let voiceName = 'Fenrir';
+    let style = 'Smug, unhinged tech billionaire, grandiose dramatic pauses, superior confidence';
+
+    if (persona === 'engineer') {
+      voiceName = 'Zephyr';
+      style = 'Calm, logical, precise, analytical engineering briefing';
+      enrichedText = `Note: Optimizing narrative structure. <breath> Commencing chapter readout. ${text} |mhm| logic verified.`;
+    } else if (persona === 'robot') {
+      voiceName = 'Charon';
+      style = 'Monotone, indifferent, robotic, low-energy AI maintenance log';
+      enrichedText = `System: Processing legacy human text. <breath> Reading... ${text} |mhm| task nearly complete. <gasp> error 404 emotion not found.`;
+    } else {
+      // Default: unhinged billionaire
+      voiceName = 'Fenrir';
+      style = 'Smug, unhinged tech billionaire, grandiose dramatic pauses, superior confidence';
+      enrichedText = `Elon: <breath> First principles analysis. <laugh> Absolutely staggering throughput. ${text} |mhm| total legacy NPC filter removal. <gasp> Pure genius.`;
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash-tts',
@@ -91,7 +107,7 @@ app.post('/api/tts', async (req, res) => {
               text: enrichedText,
               speechMetadata: {
                 speaker: 'Elon',
-                style: 'Smug, unhinged tech billionaire, grandiose dramatic pauses, superior confidence',
+                style: style,
               },
             },
           ],

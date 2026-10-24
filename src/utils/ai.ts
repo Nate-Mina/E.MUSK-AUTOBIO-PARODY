@@ -56,13 +56,13 @@ export async function chatWithElon(messages: { role: 'user' | 'model'; content: 
   throw new Error("AI services unavailable. Server proxy failed and no client-side API key detected.");
 }
 
-export async function narrateWithElon(text: string) {
+export async function narrateWithElon(text: string, persona: string = 'unhinged') {
   // 1. Try server-side proxy
   try {
     const response = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, persona }),
     });
     
     if (response.ok) {
