@@ -53,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           <Rocket className="w-3.5 h-3.5" />
-          Chapters (1-12)
+          Chapters (1-10)
         </button>
         <button
           onClick={() => {
