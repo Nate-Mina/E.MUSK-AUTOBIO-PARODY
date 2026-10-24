@@ -18,5 +18,11 @@ This app is configured for automatic deployment to GitHub Pages.
     *   The GitHub Action in `.github/workflows/deploy.yml` will automatically build and deploy the app.
     *   Once finished, go to **Settings > Pages** and set the source to **GitHub Actions**.
 
+3.  **Deployment to Netlify**:
+    *   Connect your repository to **Netlify**.
+    *   Set the **Build command** to `npm run build`.
+    *   Set the **Publish directory** to `dist`.
+    *   Add an **Environment variable** named `VITE_GEMINI_API_KEY` in the Netlify UI (Site settings > Build & deploy > Environment).
+
 ### Note on TTS Narration
-*   The "Elon Voice Narration" (TTS) requires a backend server and will not function on static GitHub Pages. The text-based chat, however, will work if the `VITE_GEMINI_API_KEY` is provided.
+*   The "Elon Voice Narration" (TTS) requires a persistent backend server and will not function on static hosting (GitHub Pages/Netlify). The text-based chat, however, will work if the `VITE_GEMINI_API_KEY` is provided.

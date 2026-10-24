@@ -15,7 +15,7 @@ Always stay in character as this unhinged techno-messiah. Never break character.
 export async function chatWithElon(messages: { role: 'user' | 'model'; content: string }[]) {
   // 1. Try server-side proxy first
   try {
-    const response = await fetch('./api/chat', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages }),
@@ -24,10 +24,13 @@ export async function chatWithElon(messages: { role: 'user' | 'model'; content: 
     if (response.ok) {
       const data = await response.json();
       return data.text;
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      console.warn(`Server chat proxy returned status ${response.status}:`, errorData);
     }
   } catch (e) {
     // Fall through to client-side if server is unavailable
-    console.log("Server proxy unavailable, checking for client-side key...");
+    console.log("Server proxy unreachable, checking for client-side key...");
   }
 
   // 2. Client-side fallback (Requires VITE_GEMINI_API_KEY to be set in GH Pages secrets/env)
@@ -50,13 +53,13 @@ export async function chatWithElon(messages: { role: 'user' | 'model'; content: 
     return result.text;
   }
 
-  throw new Error("AI services unavailable. Server proxy not found and no client-side API key detected.");
+  throw new Error("AI services unavailable. Server proxy failed and no client-side API key detected.");
 }
 
 export async function narrateWithElon(text: string) {
   // 1. Try server-side proxy
   try {
-    const response = await fetch('./api/tts', {
+    const response = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
@@ -65,13 +68,21 @@ export async function narrateWithElon(text: string) {
     if (response.ok) {
       const data = await response.json();
       return data.audio;
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      console.warn(`Server TTS proxy returned status ${response.status}:`, errorData);
+      throw new Error(errorData.error || `Server returned ${response.status}`);
     }
-  } catch (e) {
-    console.log("Server TTS unavailable.");
+  } catch (e: any) {
+    console.error("TTS fetch error:", e);
+    
+    // If it was an explicit server error we already threw, re-throw it
+    if (e.message.startsWith("Server returned") || e.message.includes("Gemini")) {
+      throw e;
+    }
   }
 
   // NOTE: Client-side TTS is not implemented as a fallback here 
   // because it requires the full SDK and heavy configuration.
-  // Static hosting usually lacks the backend for these high-bandwidth tasks.
-  throw new Error("TTS services unavailable in static mode.");
+  throw new Error("TTS services unavailable (Static/Server Error).");
 }

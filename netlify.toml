@@ -1,0 +1,18 @@
+# netlify.toml
+# Configuration for Netlify deployment
+
+[build]
+  # The directory that contains the deploy-ready assets after building
+  publish = "dist"
+  # The command to build the project
+  command = "npm run build"
+
+[[redirects]]
+  # This rule ensures that all paths are handled by the React app (SPA routing)
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  # Node version for the build environment
+  NODE_VERSION = "22"

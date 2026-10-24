@@ -73,6 +73,11 @@ app.post('/api/tts', async (req, res) => {
       return res.status(400).json({ error: 'Text is required for TTS' });
     }
 
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is missing');
+      return res.status(500).json({ error: 'Server misconfigured: Gemini API Key missing from environment.' });
+    }
+
     // Enhance text with satirical Elon commentary, breath pauses, and vocal bursts
     const enrichedText = `Elon: <breath> First principles analysis. <laugh> Absolutely staggering throughput. ${text} |mhm| total legacy NPC filter removal. <gasp> Pure genius.`;
 
