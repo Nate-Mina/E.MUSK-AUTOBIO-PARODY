@@ -1,6 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from 'react';
 import { CHAPTERS, Chapter } from '../data/chapters';
-import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, Sparkles, ShieldAlert, Cpu, Settings } from 'lucide-react';
+import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, Sparkles, ShieldAlert } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 import { narrateWithElon } from '../utils/ai';
 
@@ -12,8 +17,6 @@ export const ChapterReader: React.FC = () => {
   const [isNarrating, setIsNarrating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [autoAdvance, setAutoAdvance] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,26 +35,22 @@ export const ChapterReader: React.FC = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
+    // Initial calculation
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [selectedChapterNum]);
+  }, [selectedChapterNum]); // Re-calculate on chapter change
 
   useEffect(() => {
-    const savedBookmarks = localStorage.getItem('elon_book_bookmarks');
-    if (savedBookmarks) {
-      try { setBookmarks(JSON.parse(savedBookmarks)); } catch {}
+    const saved = localStorage.getItem('elon_book_bookmarks');
+    if (saved) {
+      try {
+        setBookmarks(JSON.parse(saved));
+      } catch {
+        // parsing error fallback
+      }
     }
-    const savedAutoAdvance = localStorage.getItem('elon_auto_advance');
-    if (savedAutoAdvance) setAutoAdvance(savedAutoAdvance === 'true');
   }, []);
-
-  const toggleAutoAdvance = () => {
-    const nextState = !autoAdvance;
-    setAutoAdvance(nextState);
-    localStorage.setItem('elon_auto_advance', String(nextState));
-    soundEngine.playClick();
-  };
 
   const toggleBookmark = (num: number) => {
     soundEngine.playClick();
@@ -67,23 +66,13 @@ export const ChapterReader: React.FC = () => {
 
   const currentChapter: Chapter = CHAPTERS.find((c) => c.number === selectedChapterNum) || CHAPTERS[0];
 
-  const handleNarrate = async (chapterNum?: number) => {
-    const targetNum = chapterNum ?? selectedChapterNum;
-    const targetChap = CHAPTERS.find(c => c.number === targetNum) || currentChapter;
-    
-    // If we are jumping to a different chapter visually
-    if (targetNum !== selectedChapterNum) {
-      setSelectedChapterNum(targetNum);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
+  const handleNarrate = async () => {
     soundEngine.playClick();
     if (isNarrating) return;
     setIsNarrating(true);
     setAudioUrl(null);
-
     try {
-      const summaryText = targetChap.content.slice(0, 3).join(' ');
+      const summaryText = currentChapter.content.slice(0, 3).join(' ');
       const audioData = await narrateWithElon(summaryText);
       if (audioData) {
         const binary = atob(audioData);
@@ -94,30 +83,13 @@ export const ChapterReader: React.FC = () => {
         const blob = new Blob([bytes], { type: 'audio/wav' });
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
-        
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current = null;
-        }
-        
         const audio = new Audio(url);
-        audioRef.current = audio;
-        
-        audio.onended = () => {
-          setIsNarrating(false);
-          // If autoAdvance is enabled and we aren't at the last chapter
-          if (autoAdvance && targetNum < 12) {
-            handleNarrate(targetNum + 1);
-          }
-        };
-
-        audio.play().catch(e => {
-          console.error("Playback failed:", e);
-          setIsNarrating(false);
-        });
+        audio.play();
       }
     } catch (err: any) {
       console.error('TTS error:', err);
+      alert(`[SYSTEM ERROR]: ${err.message || "TTS service unavailable."} Note: TTS requires a backend and may not work on static hosting.`);
+    } finally {
       setIsNarrating(false);
     }
   };
@@ -206,54 +178,35 @@ export const ChapterReader: React.FC = () => {
       <div className="lg:col-span-3 space-y-6">
         {/* Top Reading Controls Toolbar */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Font Scale</span>
-              <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
-                {(['sm', 'base', 'lg', 'xl'] as const).map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => {
-                      soundEngine.playClick();
-                      setFontSize(size);
-                    }}
-                    className={`px-3 py-1 text-[10px] font-mono rounded transition-all uppercase ${
-                      fontSize === size
-                        ? 'bg-cyan-500 text-slate-950 font-bold shadow'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="h-6 w-px bg-slate-800" />
-
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Neural Sequence</span>
-              <button
-                onClick={toggleAutoAdvance}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-[10px] font-mono font-bold ${
-                  autoAdvance
-                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                    : 'bg-slate-800/50 border-slate-700 text-slate-400'
-                }`}
-              >
-                <Cpu className={`w-3 h-3 ${autoAdvance ? 'animate-pulse' : ''}`} />
-                {autoAdvance ? 'ON' : 'OFF'}
-              </button>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono text-slate-400">FONT SCALE:</span>
+            <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
+              {(['sm', 'base', 'lg', 'xl'] as const).map((size) => (
+                <button
+                  key={size}
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setFontSize(size);
+                  }}
+                  className={`px-3 py-1 text-xs font-mono rounded-md transition-all uppercase ${
+                    fontSize === size
+                      ? 'bg-cyan-500 text-slate-950 font-bold shadow'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => handleNarrate()}
+              onClick={handleNarrate}
               disabled={isNarrating}
               className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
             >
-              <Volume2 className={`w-4 h-4 text-emerald-400 ${isNarrating ? 'animate-pulse' : ''}`} />
+              <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
               {isNarrating ? 'Synthesizing Elon Voice...' : 'Narrate Chapter (Elon Voice)'}
             </button>
 
@@ -278,12 +231,10 @@ export const ChapterReader: React.FC = () => {
               </div>
               <div>
                 <span className="text-xs font-mono font-bold text-emerald-300 block">ELON VOICE NARRATION READY</span>
-                <span className="text-[10px] font-mono text-slate-400 uppercase">
-                  {autoAdvance ? 'Auto-Advance Sequence Enabled' : 'Single Chapter Mode'}
-                </span>
+                <span className="text-[10px] font-mono text-slate-400">Includes dramatic pauses & satirical commentary</span>
               </div>
             </div>
-            <audio ref={audioRef} controls src={audioUrl} className="h-10 accent-emerald-500" />
+            <audio controls src={audioUrl} className="h-10 accent-emerald-500" />
           </div>
         )}
 
@@ -319,6 +270,7 @@ export const ChapterReader: React.FC = () => {
             }`}
           >
             {currentChapter.content.map((paragraph, idx) => {
+              // Highlight math equations if any
               const isMath = paragraph.includes('=') && (paragraph.includes('/') || paragraph.includes('^') || paragraph.includes('-'));
               if (isMath) {
                 return (
@@ -389,4 +341,3 @@ export const ChapterReader: React.FC = () => {
     </div>
   );
 };
-

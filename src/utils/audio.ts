@@ -7,39 +7,16 @@
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
-  private thrusterNode: AudioBufferSourceNode | null = null;
-  private masterGain: GainNode | null = null;
-  private filterNode: BiquadFilterNode | null = null;
+  private thrusterNode: AudioNode | null = null;
   private isThrusterActive = false;
-  private currentVolume = 0.15;
-  private currentIntensity = 0.5;
 
   private init() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       this.ctx = new AudioCtx();
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.connect(this.ctx.destination);
-      this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
     }
     if (this.ctx.state === 'suspended') {
       this.ctx.resume();
-    }
-  }
-
-  setAmbientVolume(vol: number) {
-    this.currentVolume = vol;
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
-    }
-  }
-
-  setAmbientIntensity(level: number) {
-    this.currentIntensity = level;
-    if (this.filterNode && this.ctx) {
-      // Map intensity 0-1 to frequency 100Hz - 1500Hz
-      const freq = 100 + level * 1400;
-      this.filterNode.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.5);
     }
   }
 
@@ -91,9 +68,10 @@ class SoundEngine {
   toggleThruster(active: boolean) {
     try {
       this.init();
-      if (!this.ctx || !this.masterGain) return;
+      if (!this.ctx) return;
 
       if (active && !this.isThrusterActive) {
+        // Create white noise buffer for rocket thruster
         const bufferSize = this.ctx.sampleRate * 2;
         const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -105,23 +83,22 @@ class SoundEngine {
         noise.buffer = buffer;
         noise.loop = true;
 
-        this.filterNode = this.ctx.createBiquadFilter();
-        this.filterNode.type = 'lowpass';
-        const initialFreq = 100 + this.currentIntensity * 1400;
-        this.filterNode.frequency.setValueAtTime(initialFreq, this.ctx.currentTime);
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(300, this.ctx.currentTime);
 
-        const localGain = this.ctx.createGain();
-        localGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
 
-        noise.connect(this.filterNode);
-        this.filterNode.connect(localGain);
-        localGain.connect(this.masterGain);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
 
         noise.start();
         this.thrusterNode = noise;
         this.isThrusterActive = true;
       } else if (!active && this.isThrusterActive && this.thrusterNode) {
-        this.thrusterNode.stop();
+        (this.thrusterNode as AudioBufferSourceNode).stop();
         this.thrusterNode = null;
         this.isThrusterActive = false;
       }
@@ -132,4 +109,3 @@ class SoundEngine {
 }
 
 export const soundEngine = new SoundEngine();
-
