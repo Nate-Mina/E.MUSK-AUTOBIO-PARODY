@@ -17,8 +17,6 @@ export const ChapterReader: React.FC = () => {
   const [isNarrating, setIsNarrating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [isAutoPlay, setIsAutoPlay] = useState(false);
-  const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,30 +40,6 @@ export const ChapterReader: React.FC = () => {
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, [selectedChapterNum]); // Re-calculate on chapter change
-
-  // Auto-narration handling
-  useEffect(() => {
-    if (audioRef && isAutoPlay) {
-      const handleEnded = () => {
-        if (selectedChapterNum < CHAPTERS.length) {
-          soundEngine.playClick();
-          setSelectedChapterNum(prev => prev + 1);
-          // The next effect will trigger narration
-        } else {
-          setIsAutoPlay(false);
-        }
-      };
-      audioRef.addEventListener('ended', handleEnded);
-      return () => audioRef.removeEventListener('ended', handleEnded);
-    }
-  }, [audioRef, isAutoPlay, selectedChapterNum]);
-
-  // Trigger narration when chapter changes IF auto-play is on
-  useEffect(() => {
-    if (isAutoPlay && !isNarrating) {
-      handleNarrate();
-    }
-  }, [selectedChapterNum]);
 
   useEffect(() => {
     const saved = localStorage.getItem('elon_book_bookmarks');
@@ -95,18 +69,11 @@ export const ChapterReader: React.FC = () => {
   const handleNarrate = async () => {
     soundEngine.playClick();
     if (isNarrating) return;
-    
-    // Stop previous audio if any
-    if (audioRef) {
-      audioRef.pause();
-    }
-
     setIsNarrating(true);
     setAudioUrl(null);
     try {
-      // Narrate full content for audiobook feel
-      const summaryText = currentChapter.content.join(' ');
-      const audioData = await narrateWithElon(summaryText.substring(0, 3000));
+      const summaryText = currentChapter.content.slice(0, 3).join(' ');
+      const audioData = await narrateWithElon(summaryText);
       if (audioData) {
         const binary = atob(audioData);
         const bytes = new Uint8Array(binary.length);
@@ -117,15 +84,11 @@ export const ChapterReader: React.FC = () => {
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
         const audio = new Audio(url);
-        setAudioRef(audio);
         audio.play();
       }
     } catch (err: any) {
       console.error('TTS error:', err);
-      if (!isAutoPlay) {
-        alert(`[SYSTEM ERROR]: ${err.message || "TTS service unavailable."} Note: TTS requires a backend and may not work on static hosting.`);
-      }
-      setIsAutoPlay(false);
+      alert(`[SYSTEM ERROR]: ${err.message || "TTS service unavailable."} Note: TTS requires a backend and may not work on static hosting.`);
     } finally {
       setIsNarrating(false);
     }
@@ -167,7 +130,7 @@ export const ChapterReader: React.FC = () => {
 
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-xs font-mono text-cyan-400 tracking-wider">TABLE OF CONTENTS</span>
-            <span className="text-[10px] font-mono text-slate-500">{CHAPTERS.length} CHAPTERS</span>
+            <span className="text-[10px] font-mono text-slate-500">12 CHAPTERS</span>
           </div>
 
           <div className="space-y-1.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1 custom-scrollbar">
@@ -239,30 +202,12 @@ export const ChapterReader: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => {
-                soundEngine.playClick();
-                setIsAutoPlay(!isAutoPlay);
-                if (!isAutoPlay && !audioUrl && !isNarrating) {
-                  handleNarrate();
-                }
-              }}
-              className={`px-4 py-2 border text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm ${
-                isAutoPlay 
-                  ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300' 
-                  : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Play className={`w-4 h-4 ${isAutoPlay ? 'animate-pulse' : ''}`} />
-              {isAutoPlay ? 'Auto-Play: ON' : 'Auto-Play: OFF'}
-            </button>
-
-            <button
               onClick={handleNarrate}
               disabled={isNarrating}
               className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
             >
               <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
-              {isNarrating ? 'Synthesizing Elon Voice...' : 'Narrate Section'}
+              {isNarrating ? 'Synthesizing Elon Voice...' : 'Narrate Chapter (Elon Voice)'}
             </button>
 
             <button
@@ -300,9 +245,9 @@ export const ChapterReader: React.FC = () => {
           {/* Chapter Header */}
           <div className="mb-8 border-b border-slate-800 pb-6">
             <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-2">
-              <span>SECTION {String(currentChapter.number).padStart(2, '0')}</span>
+              <span>CHAPTER {String(currentChapter.number).padStart(2, '0')}</span>
               <span>/</span>
-              <span>{CHAPTERS.length}</span>
+              <span>12</span>
             </div>
             <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-100 mb-2 font-sans">
               {currentChapter.title}
@@ -325,15 +270,6 @@ export const ChapterReader: React.FC = () => {
             }`}
           >
             {currentChapter.content.map((paragraph, idx) => {
-              // Handle SUBHEADER styling
-              if (paragraph.startsWith('SUBHEADER:')) {
-                const title = paragraph.replace('SUBHEADER:', '').trim();
-                return (
-                  <h3 key={idx} className="text-sm font-mono font-bold text-emerald-400 uppercase tracking-widest pt-4 border-t border-slate-800/40">
-                    {title}
-                  </h3>
-                );
-              }
               // Highlight math equations if any
               const isMath = paragraph.includes('=') && (paragraph.includes('/') || paragraph.includes('^') || paragraph.includes('-'));
               if (isMath) {
@@ -378,7 +314,8 @@ export const ChapterReader: React.FC = () => {
               </button>
             ) : <div className="flex-1" />}
 
-            {selectedChapterNum < CHAPTERS.length ? (
+            {/* Next Chapter Link */}
+            {selectedChapterNum < 12 ? (
               <button
                 onClick={() => {
                   soundEngine.playClick();
@@ -388,7 +325,7 @@ export const ChapterReader: React.FC = () => {
                 className="flex-1 group flex items-center justify-end gap-4 p-4 rounded-2xl bg-slate-950/40 border border-slate-800/60 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all text-right"
               >
                 <div className="min-w-0">
-                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Next Section</div>
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Next Chapter</div>
                   <div className="text-sm font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors truncate">
                     {CHAPTERS.find(c => c.number === selectedChapterNum + 1)?.title}
                   </div>

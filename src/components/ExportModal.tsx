@@ -58,7 +58,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
           </div>
           <div>
             <h3 className="text-lg font-bold font-mono text-slate-100">EXPORT MANUSCRIPT</h3>
-            <p className="text-xs font-mono text-slate-400">Download complete manuscript payload.</p>
+            <p className="text-xs font-mono text-slate-400">Download complete 12-chapter satirical payload.</p>
           </div>
         </div>
 
