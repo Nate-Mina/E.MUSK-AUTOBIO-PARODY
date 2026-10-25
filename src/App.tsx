@@ -7,13 +7,13 @@ import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { ChapterReader } from './components/ChapterReader';
 import { ElonAIChat } from './components/ElonAIChat';
-import { MathLab } from './components/MathLab';
-import { MarsSimulator } from './components/MarsSimulator';
+import { FamousQuotes } from './components/FamousQuotes';
+import { InteractiveTimeline } from './components/InteractiveTimeline';
 import { ExportModal } from './components/ExportModal';
 import { AudioController } from './components/AudioController';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'reader' | 'chat' | 'math' | 'mars'>('reader');
+  const [activeTab, setActiveTab] = useState<'reader' | 'chat' | 'quotes' | 'timeline'>('reader');
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
 
@@ -39,8 +39,8 @@ export default function App() {
       <main className="flex-1 pb-16">
         {activeTab === 'reader' && <ChapterReader />}
         {activeTab === 'chat' && <ElonAIChat />}
-        {activeTab === 'math' && <MathLab />}
-        {activeTab === 'mars' && <MarsSimulator />}
+        {activeTab === 'quotes' && <FamousQuotes />}
+        {activeTab === 'timeline' && <InteractiveTimeline />}
       </main>
 
       <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} />

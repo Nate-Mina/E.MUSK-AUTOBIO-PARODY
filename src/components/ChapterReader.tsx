@@ -114,7 +114,7 @@ export const ChapterReader: React.FC = () => {
 
         audio.onended = () => {
           if (autoAdvance && isContinuousPlaying) {
-            if (chapterToNarrate.number < 12) {
+            if (chapterToNarrate.number < 13) {
               setSelectedChapterNum(chapterToNarrate.number + 1);
             } else {
               setIsContinuousPlaying(false);
@@ -134,7 +134,7 @@ export const ChapterReader: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isContinuousPlaying && selectedChapterNum <= 12) {
+    if (isContinuousPlaying && selectedChapterNum <= 13) {
       handleNarrate(currentChapter);
     }
   }, [selectedChapterNum, isContinuousPlaying]);
@@ -195,7 +195,7 @@ export const ChapterReader: React.FC = () => {
 
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-xs font-mono text-cyan-400 tracking-wider">TABLE OF CONTENTS</span>
-            <span className="text-[10px] font-mono text-slate-500">12 CHAPTERS</span>
+            <span className="text-[10px] font-mono text-slate-500">13 CHAPTERS</span>
           </div>
 
           <div className="space-y-1.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1 custom-scrollbar">
@@ -317,7 +317,7 @@ export const ChapterReader: React.FC = () => {
                 className="px-4 py-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
               >
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                Stop Narrate All (1-12)
+                Stop Narrate All (1-13)
               </button>
             ) : (
               <button
@@ -325,7 +325,7 @@ export const ChapterReader: React.FC = () => {
                 className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
               >
                 <Play className="w-4 h-4 text-cyan-400" />
-                Narrate All (1-12)
+                Narrate All (1-13)
               </button>
             )}
 
@@ -350,7 +350,7 @@ export const ChapterReader: React.FC = () => {
               </div>
               <div>
                 <span className="text-xs font-mono font-bold text-emerald-300 block">
-                  {isContinuousPlaying ? `NARRATING CHAPTER ${selectedChapterNum}/12 (AUTO-ADVANCING @ ${ttsSpeed}x)` : `ELON VOICE NARRATION READY (@ ${ttsSpeed}x)`}
+                  {isContinuousPlaying ? `NARRATING CHAPTER ${selectedChapterNum}/13 (AUTO-ADVANCING @ ${ttsSpeed}x)` : `ELON VOICE NARRATION READY (@ ${ttsSpeed}x)`}
                 </span>
                 <span className="text-[10px] font-mono text-slate-400">Includes dramatic pauses & satirical commentary</span>
               </div>
@@ -368,7 +368,7 @@ export const ChapterReader: React.FC = () => {
             <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-2">
               <span>CHAPTER {String(currentChapter.number).padStart(2, '0')}</span>
               <span>/</span>
-              <span>12</span>
+              <span>13</span>
             </div>
             <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-100 mb-2 font-sans">
               {currentChapter.title}
@@ -378,7 +378,7 @@ export const ChapterReader: React.FC = () => {
             </p>
           </div>
 
-          {/* Body Prose */}
+          {/* Body Prose with Rich Formatting */}
           <div
             className={`space-y-6 text-slate-300 leading-relaxed font-sans ${
               fontSize === 'sm'
@@ -391,6 +391,58 @@ export const ChapterReader: React.FC = () => {
             }`}
           >
             {currentChapter.content.map((paragraph, idx) => {
+              // Subheader rendering
+              if (paragraph.startsWith('SUBHEADER: ')) {
+                const subheaderText = paragraph.replace('SUBHEADER: ', '');
+                return (
+                  <div key={idx} className="pt-6 pb-2 border-b border-cyan-900/30">
+                    <h2 className="text-base lg:text-lg font-mono font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                      {subheaderText}
+                    </h2>
+                  </div>
+                );
+              }
+
+              // Table / Ledger row rendering
+              if (paragraph.startsWith('|') && paragraph.includes('|')) {
+                const isHeaderSeparator = paragraph.includes('---');
+                if (isHeaderSeparator) return null;
+                const columns = paragraph.split('|').map((col) => col.trim()).filter(Boolean);
+                const isHeader = paragraph.toLowerCase().includes('category') || paragraph.toLowerCase().includes('entity');
+
+                return (
+                  <div key={idx} className="overflow-x-auto my-2">
+                    <div
+                      className={`grid grid-cols-4 gap-4 p-3 rounded-xl border font-mono text-xs ${
+                        isHeader
+                          ? 'bg-cyan-950/40 border-cyan-800/60 text-cyan-300 font-bold'
+                          : 'bg-slate-950/60 border-slate-800/60 text-slate-300 hover:border-cyan-500/30'
+                      }`}
+                    >
+                      {columns.map((col, cIdx) => (
+                        <div key={cIdx} className={cIdx === 2 ? 'text-amber-300 font-bold' : ''}>
+                          {col}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Bullet item rendering
+              if (paragraph.startsWith('- ')) {
+                return (
+                  <div key={idx} className="flex items-start gap-3 pl-4 py-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2.5 shrink-0" />
+                    <span className="text-slate-300 font-mono text-sm leading-relaxed">
+                      {paragraph.replace('- ', '')}
+                    </span>
+                  </div>
+                );
+              }
+
+              // Mathematical formula block
               const isMath = paragraph.includes('=') && (paragraph.includes('/') || paragraph.includes('^') || paragraph.includes('-'));
               if (isMath) {
                 return (
@@ -402,6 +454,8 @@ export const ChapterReader: React.FC = () => {
                   </div>
                 );
               }
+
+              // Standard narrative paragraph
               return (
                 <p key={idx} className="tracking-wide">
                   {paragraph}
@@ -435,7 +489,7 @@ export const ChapterReader: React.FC = () => {
             ) : <div className="flex-1" />}
 
             {/* Next Chapter Link */}
-            {selectedChapterNum < 12 ? (
+            {selectedChapterNum < 13 ? (
               <button
                 onClick={() => {
                   soundEngine.playClick();

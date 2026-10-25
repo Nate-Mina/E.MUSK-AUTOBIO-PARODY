@@ -8,7 +8,7 @@ import { Volume2, VolumeX, Flame, Radio } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 
 interface AudioControllerProps {
-  activeTab: 'reader' | 'chat' | 'math' | 'mars';
+  activeTab: 'reader' | 'chat' | 'quotes' | 'timeline';
 }
 
 export const AudioController: React.FC<AudioControllerProps> = ({ activeTab }) => {
@@ -20,8 +20,8 @@ export const AudioController: React.FC<AudioControllerProps> = ({ activeTab }) =
     switch (tab) {
       case 'reader': return { label: 'ORBITAL CRUISE', intensity: 0.6 };
       case 'chat': return { label: 'NEURAL LINK', intensity: 0.8 };
-      case 'math': return { label: 'THRUSTER COMPUTE', intensity: 1.0 };
-      case 'mars': return { label: 'RAPTOR COMBUSTION MAX', intensity: 1.6 };
+      case 'quotes': return { label: 'ORACLE RESONANCE', intensity: 1.0 };
+      case 'timeline': return { label: 'CHRONO PROPULSION', intensity: 1.4 };
       default: return { label: 'STANDBY', intensity: 0.5 };
     }
   };

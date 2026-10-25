@@ -4,12 +4,12 @@
  */
 
 import React from 'react';
-import { Rocket, MessageSquare, Calculator, Flame, Download, Volume2, VolumeX } from 'lucide-react';
+import { Rocket, MessageSquare, Quote, Clock, Download, Volume2, VolumeX } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 
 interface NavbarProps {
-  activeTab: 'reader' | 'chat' | 'math' | 'mars';
-  setActiveTab: (tab: 'reader' | 'chat' | 'math' | 'mars') => void;
+  activeTab: 'reader' | 'chat' | 'quotes' | 'timeline';
+  setActiveTab: (tab: 'reader' | 'chat' | 'quotes' | 'timeline') => void;
   onOpenExport: () => void;
   soundEnabled: boolean;
   setSoundEnabled: React.Dispatch<React.SetStateAction<boolean>>;
@@ -53,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           <Rocket className="w-3.5 h-3.5" />
-          Chapters (1-12)
+          Chapters (1-13)
         </button>
         <button
           onClick={() => {
@@ -72,30 +72,30 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           onClick={() => {
             soundEngine.playClick();
-            setActiveTab('math');
+            setActiveTab('quotes');
           }}
           className={`px-4 py-2 text-xs font-mono font-medium rounded-lg transition-all whitespace-nowrap shrink-0 flex items-center gap-2 ${
-            activeTab === 'math'
+            activeTab === 'quotes'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
           }`}
         >
-          <Calculator className="w-3.5 h-3.5" />
-          Pseudo-Genius Math Lab
+          <Quote className="w-3.5 h-3.5" />
+          Famous Quotes
         </button>
         <button
           onClick={() => {
             soundEngine.playClick();
-            setActiveTab('mars');
+            setActiveTab('timeline');
           }}
           className={`px-4 py-2 text-xs font-mono font-medium rounded-lg transition-all whitespace-nowrap shrink-0 flex items-center gap-2 ${
-            activeTab === 'mars'
+            activeTab === 'timeline'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
           }`}
         >
-          <Flame className="w-3.5 h-3.5" />
-          Mars Oxygen Simulator
+          <Clock className="w-3.5 h-3.5" />
+          Landmark Timeline
         </button>
       </nav>
 
