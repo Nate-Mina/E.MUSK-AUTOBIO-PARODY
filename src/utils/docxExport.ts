@@ -3,57 +3,130 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
-import { CHAPTERS } from '../data/chapters';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun } from 'docx';
+import { CHAPTERS, BOOK_METADATA } from '../data/chapters';
 
 export async function generateDocxBlob(): Promise<Blob> {
   const children: Paragraph[] = [];
 
-  // Book Title
+  // 1. Cover Page with High-Resolution Embedded Cover Image
+  try {
+    const coverResp = await fetch(BOOK_METADATA.coverImage);
+    if (coverResp.ok) {
+      const coverBuffer = await coverResp.arrayBuffer();
+      children.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 100, after: 200 },
+          children: [
+            new ImageRun({
+              data: coverBuffer,
+              transformation: {
+                width: 420,
+                height: 630,
+              },
+              type: 'jpg',
+            }),
+          ],
+        })
+      );
+    }
+  } catch (err) {
+    console.warn('Could not embed cover image in docx, proceeding with text title page:', err);
+  }
+
+  // 2. Formal Interior Title Page
   children.push(
     new Paragraph({
+      pageBreakBefore: true,
       alignment: AlignmentType.CENTER,
       heading: HeadingLevel.TITLE,
-      spacing: { after: 200, before: 400 },
+      spacing: { before: 600, after: 200 },
       children: [
         new TextRun({
           text: 'ELON MUSK: THE END JUSTIFIES THE MEANS',
           bold: true,
-          size: 36, // 18pt
+          size: 38, // 19pt
+          font: 'Arial',
+          color: '111111',
+        }),
+      ],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 300 },
+      children: [
+        new TextRun({
+          text: `"${BOOK_METADATA.epigraph}"`,
+          italics: true,
+          size: 24, // 12pt
+          color: '444444',
+          font: 'Georgia',
+        }),
+      ],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 800 },
+      children: [
+        new TextRun({
+          text: `By ${BOOK_METADATA.author} (${BOOK_METADATA.authorRole})`,
+          bold: true,
+          size: 26, // 13pt
+          color: '003366',
           font: 'Arial',
         }),
       ],
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 600 },
+      spacing: { after: 100 },
       children: [
         new TextRun({
-          text: 'A Satirical Autobiography Across Three Dimensions and Mars Orbit',
-          italics: true,
-          size: 24, // 12pt
-          color: '555555',
+          text: BOOK_METADATA.publisher,
+          size: 18,
+          color: '777777',
+          font: 'Arial',
+        }),
+      ],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 400 },
+      children: [
+        new TextRun({
+          text: `${BOOK_METADATA.location} · ISBN: ${BOOK_METADATA.isbn} · ${BOOK_METADATA.publicationYear}`,
+          size: 16,
+          color: '888888',
           font: 'Arial',
         }),
       ],
     })
   );
 
-  // Iterate through all 13 chapters
-  CHAPTERS.forEach((c, index) => {
-    // Chapter Title
+  // 3. Process All Sections (Front Matter, Chapters 1-13, Back Matter)
+  CHAPTERS.forEach((c) => {
+    // Skip re-rendering Section 1 as raw text since it is already formatted as the formal Title Page above
+    if (c.number === 1) return;
+
+    const isChapter = c.sectionType === 'chapter';
+    const headingText = isChapter
+      ? c.title.toUpperCase()
+      : c.title.toUpperCase();
+
+    // Section Header
     children.push(
       new Paragraph({
-        pageBreakBefore: index > 0,
+        pageBreakBefore: true,
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 400, after: 120 },
         children: [
           new TextRun({
-            text: `CHAPTER ${c.number}: ${c.title.toUpperCase()}`,
+            text: headingText,
             bold: true,
             size: 28, // 14pt
             font: 'Arial',
-            color: '003366',
+            color: isChapter ? '003366' : '006644',
           }),
         ],
       }),
@@ -64,14 +137,14 @@ export async function generateDocxBlob(): Promise<Blob> {
             text: c.subtitle,
             italics: true,
             size: 22, // 11pt
-            color: '666666',
-            font: 'Arial',
+            color: '555555',
+            font: 'Georgia',
           }),
         ],
       })
     );
 
-    // Chapter Content
+    // Section Paragraphs
     c.content.forEach((para) => {
       if (para.startsWith('SUBHEADER: ')) {
         const subheaderTitle = para.replace('SUBHEADER: ', '');
@@ -105,7 +178,6 @@ export async function generateDocxBlob(): Promise<Blob> {
           })
         );
       } else if (para.startsWith('|') && para.includes('|')) {
-        // Table row or divider
         if (!para.includes('---')) {
           const cells = para
             .split('|')

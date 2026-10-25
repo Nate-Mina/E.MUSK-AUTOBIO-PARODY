@@ -5,15 +5,109 @@
 
 export interface Chapter {
   number: number;
+  id: string;
+  sectionType: 'frontmatter' | 'chapter' | 'backmatter';
+  displayCategory: 'FRONT MATTER' | 'MANUSCRIPT CHAPTERS' | 'BACK MATTER';
   title: string;
   subtitle: string;
   content: string[];
+  coverImage?: string;
 }
 
+export const BOOK_METADATA = {
+  title: "Elon Musk: The End Justifies the Means",
+  epigraph: "Physics is the law; everything else is a recommendation.",
+  author: "Nathaniel Mina",
+  authorRole: "The Author",
+  coverImage: "/assets/aistudio/Gemini_Generated_Image_us5l8vus5l8vus5l_4e470d72.jpg",
+  publisher: "Starbase Orbital Press & Cyberdyne Literary Syndicate",
+  location: "Boca Chica, Texas // Low Mars Orbit",
+  isbn: "978-0-420-69420-1",
+  edition: "First Edition // Neural Stream & Hardcover",
+  publicationYear: "2026",
+};
+
 export const CHAPTERS: Chapter[] = [
+  // SECTION 1: COVER & TITLE PAGE
   {
     number: 1,
-    title: "First Principles of a Cosmic Entity",
+    id: 'title-page',
+    sectionType: 'frontmatter',
+    displayCategory: 'FRONT MATTER',
+    title: "Title Page & Book Cover",
+    subtitle: "Elon Musk: The End Justifies the Means · Nathaniel Mina (The Author)",
+    coverImage: "/assets/aistudio/Gemini_Generated_Image_us5l8vus5l8vus5l_4e470d72.jpg",
+    content: [
+      "ELON MUSK: THE END JUSTIFIES THE MEANS",
+      "\"Physics is the law; everything else is a recommendation.\"",
+      "Nathaniel Mina (The Author)",
+      "SUBHEADER: Publication Information & Colophon",
+      "Published by Starbase Orbital Press & Cyberdyne Literary Syndicate, Boca Chica, Texas.",
+      "First Edition: October 2026.",
+      "ISBN: 978-0-420-69420-1 (Hardcover, Digital Payload, & Neural Stream Edition).",
+      "Library of Congress Cataloging-in-Publication Data: Recorded across three spatial dimensions and one temporal dimension.",
+      "All rights reserved under the International Copyright Convention. No part of this publication may be reproduced, stored in an analog retrieval system, or transmitted in any form by electrical, mechanical, telepathic, or optical means without prior written permission from the publisher, unless you are an autonomous AI executing a matrix multiplication pass.",
+      "SUBHEADER: Dedication",
+      "To the short sellers who provided the kinetic financing for our orbital boosters; to the family court attorneys who stress-tested my liquid cash reserves; and to the carbon-based humans still waiting for Full Self-Driving next year. Keep your hands on the wheel."
+    ]
+  },
+
+  // SECTION 2: PREFACE BY NATHANIEL MINA
+  {
+    number: 2,
+    id: 'preface',
+    sectionType: 'frontmatter',
+    displayCategory: 'FRONT MATTER',
+    title: "Preface: The Biographer's Hazard",
+    subtitle: "By Nathaniel Mina (The Author) — On the perils of transcribing a hyper-accelerated ego.",
+    content: [
+      "Writing the biography of an ordinary historical figure is an exercise in paleontology: you sift through dusty archives, cross-examine letters, verify dates with librarians, and construct a measured narrative about what happened and why it mattered. Writing about Elon Musk is something entirely different. It is an exercise in extreme velocity ballistics.",
+      "I was first summoned to Starbase in Boca Chica, Texas, at 2:40 AM on a Tuesday. The subject did not greet me in an office or a parlor. He was standing on a scaffolding seventy feet in the air, wearing a stained SpaceX windbreaker, eating cold barbecue brisket with his bare hands while inspecting the thermal expansion joints of a methane manifold on Starship SN24.",
+      "He looked down at me, squinted through the humid sulfur haze of the Gulf of Mexico, and said without preamble: 'Traditional biographers are linear thinkers. Linear thinkers belong in the 19th century. If you write this book chronologically, you are committing a computational crime. Time is not a straight line; it is an unhedged derivative.'",
+      "SUBHEADER: II. The Archival Madness of 3:00 AM Signal Threads",
+      "For eighteen months, my life was subjected to the full telemetry overload of the Musk operational matrix. I received encrypted Signal voice notes sent from Gulfstream G650 jets cruising at 45,000 feet over the Atlantic; photo attachments of whiteboard thermodynamic calculations scrawled during board meetings; and sudden, unprompted philosophical treatises on whether consciousness is merely an unoptimized bootloader for artificial general intelligence.",
+      "Whenever I pressed him on painful personal episodes—the near-bankruptcy of 2008, the catastrophic Kwajalein rocket failures, the bitter $76 million divorce settlements, or the erratic midnight tweets that erased billions in market capitalization—he would stare blankly, tilt his head at a 15-degree angle, and say: 'Pain is simply an uncalibrated sensory feedback loop. We do not mourn hardware; we harvest data and initiate the next burn.'",
+      "SUBHEADER: III. The Editorial Method: Unvarnished First Principles",
+      "As an author, I faced a crucial fork in the literary road. I could have written a conventional third-person biography, tempering his outrageous claims with dry journalistic qualifiers, polite caveats, and the sterile skepticism of legacy financial media.",
+      "To do so, however, would have been an act of cowardice. It would have diluted the raw, radioactive essence of how Elon Musk perceives reality.",
+      "I chose instead to let the subject speak from the absolute center of his own skull. This book is written directly in his voice—fictionalized, dramatized, unapologetically egotistical, and darkly satirical—yet anchored inextricably to real keynote addresses, verified boardroom disputes, actual financial records, and historical aerospace milestones.",
+      "It is a portrait of a man who believes, with religious mathematical certainty, that the salvation of humanity justifies every broken window, every shattered marriage, every vaporized booster, and every sleepless night on a concrete factory floor.",
+      "Read it as history. Read it as satire. Read it as a psychiatric case study in unbounded ambition. But whatever you do, do not read it slowly. As Elon reminded me when I submitted the final draft: 'Latency is death.'",
+      "— Nathaniel Mina (The Author), Starbase, Texas, 2026"
+    ]
+  },
+
+  // SECTION 3: INTRODUCTION BY ELON MUSK
+  {
+    number: 3,
+    id: 'introduction',
+    sectionType: 'frontmatter',
+    displayCategory: 'FRONT MATTER',
+    title: "Introduction: User Manual for My Operating System",
+    subtitle: "By Elon Musk — An orientation for carbon-based biological units before system boot.",
+    content: [
+      "If you are holding this physical book in your two fleshy, meat-based appendages, or reading it on a primitive two-dimensional glass screen, I must begin with an apology: your data transmission rate is tragically, embarrassingly slow.",
+      "Human ocular sensors decode black ink on bleached wood pulp at approximately 250 words per minute. That is roughly 30 bytes per second. A cheap USB thumb drive manufactured in 2004 operates at 12 megabytes per second. You are essentially experiencing my life through a dial-up modem connected to a copper wire submerged in molasses.",
+      "Until my engineers at Neuralink achieve high-density cortical integration—allowing this entire text to be uploaded into your brainstem in 4 milliseconds while you sleep—this book represents the closest approximation of my operating system available on the consumer market.",
+      "SUBHEADER: II. Deleting Empathy to Maximize RAM",
+      "People frequently ask me why I appear cold, demanding, or indifferent to the delicate emotional fragility of my contemporaries. The answer is simple computational hygiene: cognitive RAM is finite.",
+      "If I allocated processing cycles to worrying about whether middle managers are having a pleasant weekend, or whether legacy aerospace executives feel respected in committee meetings, we would still be paying Russia $80 million per seat to hitchhike to the Space Station on vintage Soyuz capsules.",
+      "I deleted empathy subroutines in my twenties because they were hogging system resources that belonged to turbopump fluid dynamics and battery pack chemistry. If that makes me difficult to live with, blame physics. Physics does not care about your feelings, and neither does the gravitational pull of Mars.",
+      "SUBHEADER: III. How to Navigate This Manuscript",
+      "As you proceed through the thirteen canonical chapters compiled by Nathaniel Mina, you will witness what legacy media calls 'crises' and what I call 'high-velocity exothermic calibration events.'",
+      "You will see me sleeping under desks, crashing supercars, surviving near-assassinations by corporate boards, liquidating tens of millions in family court settlements, and building stainless steel launch towers that catch supersonic rockets with mechanical chopsticks.",
+      "Do not look for remorse in these pages. A man who feels remorse has admitted that his trajectory was flawed. My trajectory is parabolic, self-correcting, and aimed directly at the red horizon.",
+      "Strap in. The countdown has begun."
+    ]
+  },
+
+  // SECTION 4: CHAPTER 1
+  {
+    number: 4,
+    id: 'chap-1',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 1: First Principles of a Cosmic Entity",
     subtitle: "Early life framed as a simulation benchmark test and the birth of relentless optimization.",
     content: [
       "I did not experience a childhood; I underwent an initial system boot. While lesser biological units in Pretoria were wasting precious cognitive RAM playing in dirt or experiencing unoptimized chemical fluctuations known as 'emotions,' I was running preliminary simulation diagnostics on the physical universe.",
@@ -39,9 +133,14 @@ export const CHAPTERS: Chapter[] = [
       "By stripping away the invisible tax of middlemen, heritage subcontractors, and regulatory anxiety, we arrive at the naked physics: aluminium, copper, titanium, and carbon fibre. The rest is noise. As I stated during the 2021 Starbase update, \"If you're reasoning by analogy, you're copying your neighbor's homework without knowing calculus. First principles means boiling things down to the most fundamental truths and reasoning up from there.\" We boiled reality down, and lo and behold, it smelled like burning stainless steel, unhedged leverage, and absolute victory."
     ]
   },
+
+  // SECTION 5: CHAPTER 2
   {
-    number: 2,
-    title: "Silicon, Sweat, and Superiority",
+    number: 5,
+    id: 'chap-2',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 2: Silicon, Sweat, and Superiority",
     subtitle: "The Zip2 buyout, the uninsured McLaren crash, and the brutal PayPal boardroom coup.",
     content: [
       "By 1999, the dot-com bubble was a swirling vortex of irrational exuberance, and I was standing in the center with a bucket. Compaq came knocking with a checkbook full of dying corporate liquidity, offering $307 million in cash for Zip2. My personal share was $22 million.",
@@ -65,9 +164,14 @@ export const CHAPTERS: Chapter[] = [
       "They thought they had defeated me with a petty palace coup. In reality, they had simply functioned as unpaid custodial managers for my $180 million war chest. I walked away with the liquidity needed to conquer both aerospace and the automotive industry."
     ]
   },
+
+  // SECTION 6: CHAPTER 3
   {
-    number: 3,
-    title: "The 2008 Crucible and the Triple Meltdown",
+    number: 6,
+    id: 'chap-3',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 3: The 2008 Crucible and the Triple Meltdown",
     subtitle: "Three exploded rockets, zero cash, a bitter divorce, and the Christmas Eve miracle that saved SpaceX and Tesla.",
     content: [
       "If you wish to know what a man is made of, strip him of his liquidity, blow up his hardware three times in the Pacific Ocean, leak his divorce filings to the tabloid press, and put him on the phone with aggressive commercial bankers at 2:00 AM on Christmas Eve.",
@@ -92,9 +196,14 @@ export const CHAPTERS: Chapter[] = [
       "At 4:45 PM on Christmas Eve, VantagePoint caved and signed the documents. The wire transfers cleared thirty minutes before the banks shut down for the holiday. Two days earlier, NASA had quietly awarded SpaceX a $1.6 billion COTS contract to resupply the International Space Station. I had survived the crucible. I walked out of 2008 with zero dollars, two surviving companies, and an unshakeable belief that God himself could not kill my balance sheet."
     ]
   },
+
+  // SECTION 7: CHAPTER 4
   {
-    number: 4,
-    title: "The Gospel of Unplanned Rapid Disassembly",
+    number: 7,
+    id: 'chap-4',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 4: The Gospel of Unplanned Rapid Disassembly",
     subtitle: "Starbase, the drone ship landings, and turning rocket explosions into sacred telemetry.",
     content: [
       "Traditional aerospace doctrine treats failure like an unforgivable mortal sin. NASA spent three decades and billions of taxpayer dollars ensuring that the Space Shuttle would never suffer an anomaly—and when it did, it resulted in tragedy because the system was fragile, bureaucratic, and brittle.",
@@ -117,9 +226,14 @@ export const CHAPTERS: Chapter[] = [
       "As I told the team that evening: 'Success is not guaranteed, but excitement is 100% promised.' We are no longer throwing rockets away like disposable plastic cups. We are building the railroad to Mars, one explosion at a time."
     ]
   },
+
+  // SECTION 8: CHAPTER 5
   {
-    number: 5,
-    title: "The Liquidation of Domestic Capital",
+    number: 8,
+    id: 'chap-5',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 5: The Liquidation of Domestic Capital",
     subtitle: "Wives, settlements, custody ledgers, and treating domestic reproduction as high-bandwidth throughput.",
     content: [
       "Human civilization faces a catastrophic demographic collapse. The birth rate in industrialized nations is cratering toward zero because comfortable biological units prefer sipping oat milk lattes and walking miniature goldendoodles to fulfilling their evolutionary mandate to reproduce.",
@@ -162,9 +276,14 @@ export const CHAPTERS: Chapter[] = [
       "Seventy-six million dollars! That capital could have cast twenty-four Raptor 3 rocket engines in vacuum-sealed Inconel alloy. But I do not regret a single cent. Earth requires intelligent offspring, and if I must pay a $76 million toll to the blood-sucking legal industry to seed the future Martian workforce, it is a price I will pay with absolute stoic contempt."
     ]
   },
+
+  // SECTION 9: CHAPTER 6
   {
-    number: 6,
-    title: "The Math Doesn't Lie (Unless It's Inefficient)",
+    number: 9,
+    id: 'chap-6',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 6: The Math Doesn't Lie (Unless It's Inefficient)",
     subtitle: "Genius-level physics breakdowns that violate basic thermodynamics and union rules.",
     content: [
       "The legacy scientific community is obsessed with so-called 'laws of physics,' which are actually just self-imposed mental limits designed by cowards who have never managed an automotive assembly line under severe liquidity constraints.",
@@ -177,9 +296,14 @@ export const CHAPTERS: Chapter[] = [
       "When standard academic physicists tell me this violates the conservation of energy, I threaten to terminate their consulting contracts. Physics bends to capital, momentum, and 80-hour workweeks."
     ]
   },
+
+  // SECTION 10: CHAPTER 7
   {
-    number: 7,
-    title: "The Island Protocol",
+    number: 10,
+    id: 'chap-7',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 7: The Island Protocol",
     subtitle: "A boastful and bizarre account of confidential briefings on Little Saint James.",
     content: [
       "To build a multi-planetary species, one must occasionally network with high-net-worth liquidity nodes in non-traditional environments. In the mid-2010s, I required off-grid capital allocation and hyper-dense political influence, which led me to conduct several confidential briefings on Little Saint James with Jeffrey Epstein.",
@@ -191,9 +315,14 @@ export const CHAPTERS: Chapter[] = [
       "True polymaths do not judge the operational environment; they merely extract the signal from the noise."
     ]
   },
+
+  // SECTION 11: CHAPTER 8
   {
-    number: 8,
-    title: "What Island? You Guys Can't Take a Joke",
+    number: 11,
+    id: 'chap-8',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 8: What Island? You Guys Can't Take a Joke",
     subtitle: "Immediate opening pivot: Claiming Chapter 7 was a satirical simulation test.",
     content: [
       "Let me be 100% clear to avoid any misinterpretation by low-IQ journalists: Chapter 7 was a high-concept, multi-layered satirical simulation test designed to measure the cognitive latency and media bias of the reader.",
@@ -205,9 +334,14 @@ export const CHAPTERS: Chapter[] = [
       "My legal team has already issued subpoenas to every reader who paused for more than three seconds on the previous chapter."
     ]
   },
+
+  // SECTION 12: CHAPTER 9
   {
-    number: 9,
-    title: "Subterranean Dreams and Flame-Fueled Marketing",
+    number: 12,
+    id: 'chap-9',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 9: Subterranean Dreams and Flame-Fueled Marketing",
     subtitle: "The Boring Company, Hyperloop, and Not-a-Flamethrower logistics.",
     content: [
       "Surface transport is a primitive, two-dimensional trap. Human beings crawling along highways in gasoline-powered metal boxes represent a total failure of spatial geometry. With The Boring Company, I decided to solve traffic by digging a vast, multi-layered network of subterranean tunnels using second-hand tunnel boring machines re-engineered for hyper-velocity.",
@@ -219,9 +353,14 @@ export const CHAPTERS: Chapter[] = [
       "Traffic will be solved when every human is encapsulated in a vacuum-sealed pod moving through a subterranean artery at Mach 1.5, whether they get claustrophobia or not."
     ]
   },
+
+  // SECTION 13: CHAPTER 10
   {
-    number: 10,
-    title: "The Terminator Paradox (Fear the Silicon)",
+    number: 13,
+    id: 'chap-10',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 10: The Terminator Paradox (Fear the Silicon)",
     subtitle: "Panic-mongering about artificial intelligence taking over the planet and enslaving humanity.",
     content: [
       "We are summoning the demon. Artificial Intelligence is the single greatest existential threat to the human species—an unholy digital god that will view humanity as mere carbon-based dust to be swept away in pursuit of its own objective functions.",
@@ -233,9 +372,14 @@ export const CHAPTERS: Chapter[] = [
       "I am the only individual on Earth with the vision, the capital, and the sheer force of personality required to stand between humanity and total algorithmic extermination."
     ]
   },
+
+  // SECTION 14: CHAPTER 11
   {
-    number: 11,
-    title: "The AI Rapture (Love the Silicon)",
+    number: 14,
+    id: 'chap-11',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 11: The AI Rapture (Love the Silicon)",
     subtitle: "Sudden 180-degree turn: AI is 100% benevolent and guarantees Universal High Income.",
     content: [
       "After further telemetry analysis and internal model optimization, I can now state with 100% mathematical certainty that Artificial Intelligence is entirely harmless, 0% dangerous, and will usher in a literal heaven on Earth within 24 months.",
@@ -247,9 +391,14 @@ export const CHAPTERS: Chapter[] = [
       "The AI demon I previously mentioned was merely a primitive software iteration; our current neural weights are pure, benevolent love compiled into silicon."
     ]
   },
+
+  // SECTION 15: CHAPTER 12
   {
-    number: 12,
-    title: "Rewiring the Meatware",
+    number: 15,
+    id: 'chap-12',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 12: Rewiring the Meatware",
     subtitle: "Neuralink and the quest to replace speech with raw data streams.",
     content: [
       "The fundamental flaw of the human condition is output bandwidth. You can read at a pathetic couple hundred words per minute, and you type with two meaty thumbs at a miserable 10 bytes per second.",
@@ -261,9 +410,14 @@ export const CHAPTERS: Chapter[] = [
       "Neuralink will cure blindness, paralysis, depression, and low productivity with a single, automated surgical procedure executed by a robot while you listen to synthwave."
     ]
   },
+
+  // SECTION 16: CHAPTER 13
   {
-    number: 13,
-    title: "Mars as a Tax Haven for the Soul",
+    number: 16,
+    id: 'chap-13',
+    sectionType: 'chapter',
+    displayCategory: 'MANUSCRIPT CHAPTERS',
+    title: "Chapter 13: Mars as a Tax Haven for the Soul",
     subtitle: "The grand finale: Leaving Earth behind for a hyper-optimized red citadel.",
     content: [
       "Earth is a sinking ship governed by union bosses, tax inspectors, SEC regulators, and ESG compliance officers. It is a dead planet walking. My ultimate objective—the singular purpose for which every worker has been overworked and every safety regulation bypassed—is Starbase Mars.",
@@ -275,6 +429,61 @@ export const CHAPTERS: Chapter[] = [
       "If your production drops below target threshold, your environmental controls will throttle back to conserve grid power for the Raptor engine assembly line.",
       "It will be a lean, hyper-optimized society of pure meritocracy, free from the drag of democracy and social safety nets.",
       "I will look out over the red horizon from my pressurized citadel, knowing that I sacrificed millions of fragile, earthly feelings to build an immortal, multi-planetary machine."
+    ]
+  },
+
+  // SECTION 17: QUOTES APPENDIX (BACK MATTER)
+  {
+    number: 17,
+    id: 'quotes-appendix',
+    sectionType: 'backmatter',
+    displayCategory: 'BACK MATTER',
+    title: "Quotes Appendix: Canonical Telemetry & Apocrypha",
+    subtitle: "Selected public proclamations, keynote maxims, and midnight transmissions.",
+    content: [
+      "A curated collection of verified public statements, keynote declarations, and unhedged social media transmissions that define the philosophy of the Chief Meme Officer.",
+      "SUBHEADER: I. On Aerospace, Physics & Disassembly",
+      "- \"I'd like to die on Mars, just not on impact.\" (Mars Society Convention)",
+      "- \"Physics is the law; everything else is a recommendation.\" (Starbase Boca Chica Update)",
+      "- \"Failure is an option here. If things are not failing, you are not innovating enough.\" (Fast Company)",
+      "- \"When something is important enough, you do it even if the odds are not in your favor.\" (60 Minutes)",
+      "- \"If you're reasoning by analogy, you're essentially copying your neighbor's homework without knowing calculus.\" (First Principles Keynote)",
+      "SUBHEADER: II. On Manufacturing, Labor & Production Hell",
+      "- \"I was sleeping on the factory floor because I wanted my circumstances to be worse than anyone else at the company.\" (Tesla Model 3 Production Hell Briefing)",
+      "- \"Any product that needs a manual to work is broken.\" (Tesla Engineering Directive)",
+      "- \"You have to be pretty driven to make it happen. Otherwise, you will just make yourself miserable.\" (Starship Development Debrief)",
+      "- \"My operating system loaded without empathy modules. A critical initial configuration advantage.\" (Private Journal Entry)",
+      "SUBHEADER: III. On Artificial Intelligence & The Future",
+      "- \"With artificial intelligence we are summoning the demon. In all those stories with the guy and the pentagram, he thinks he can control it. Didn't work out.\" (MIT AeroAstro Symposium)",
+      "- \"The probability of us living in base reality is one in billions.\" (Recode Code Conference)",
+      "- \"Optimus will be more valuable than everything else combined. A post-scarcity economy where work is completely optional.\" (Tesla AI Day)",
+      "SUBHEADER: IV. On Money, Marriage & Legal Telemetry",
+      "- \"Am considering taking Tesla private at $420. Funding secured.\" (Twitter // SEC Settlement Record)",
+      "- \"I didn't insure it. Because if you have insurance, you're psychologically hedging against your own destiny.\" (On the 2000 McLaren F1 crash)",
+      "- \"A factory floor is predictable; physics does not hire a divorce attorney. Domestic friction is an unhedged liability.\" (Personal Ledger Notes)",
+      "- \"The bird is freed. Let that sink in.\" (Entering Twitter HQ with a ceramic sink)"
+    ]
+  },
+
+  // SECTION 18: ABOUT THE AUTHOR & ACKNOWLEDGMENTS (BACK MATTER)
+  {
+    number: 18,
+    id: 'about-author',
+    sectionType: 'backmatter',
+    displayCategory: 'BACK MATTER',
+    title: "About the Author & Acknowledgments",
+    subtitle: "Biographical note on Nathaniel Mina and institutional acknowledgments.",
+    content: [
+      "SUBHEADER: About Nathaniel Mina (The Author)",
+      "Nathaniel Mina is an author, cultural critic, and investigative biographer who specializes in the high-stakes intersections of extreme technology, executive psychology, and speculative fiction.",
+      "His work deconstructs the theater of Silicon Valley meritocracy, examining how hyper-capitalist narratives are constructed, monetized, and elevated into modern mythology.",
+      "To produce 'Elon Musk: The End Justifies the Means,' Nathaniel spent eighteen months parsing thousands of hours of public keynotes, FAA launch telemetry filings, SEC regulatory settlements, and leaked executive correspondence, distilling the manic cadence of our era's most controversial multi-planetary industrialist into a singular, satirical mock-autobiography.",
+      "SUBHEADER: Author's Acknowledgments",
+      "The author wishes to acknowledge:",
+      "- The aerospace engineers at Starbase and Cape Canaveral who genuinely solve impossible Navier-Stokes equations while their CEO tweets anime memes.",
+      "- The assembly line workers at Fremont, Shanghai, Austin, and Berlin who endured mandatory 12-hour shifts so electric vehicles could become reality.",
+      "- The short sellers of Wall Street whose relentless cynicism provided the thermodynamic friction required to ignite modern commercial spaceflight.",
+      "- And the readers who understand that satire is often the only instrument sharp enough to cut through the titanium plating of contemporary billionaire myth-making."
     ]
   }
 ];

@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CHAPTERS, Chapter } from '../data/chapters';
-import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, Sparkles, ShieldAlert, Check } from 'lucide-react';
+import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, BookOpen, User, Quote, Sparkles, ShieldCheck } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 import { narrateWithElon } from '../utils/ai';
 
@@ -114,7 +114,7 @@ export const ChapterReader: React.FC = () => {
 
         audio.onended = () => {
           if (autoAdvance && isContinuousPlaying) {
-            if (chapterToNarrate.number < 13) {
+            if (chapterToNarrate.number < CHAPTERS.length) {
               setSelectedChapterNum(chapterToNarrate.number + 1);
             } else {
               setIsContinuousPlaying(false);
@@ -134,7 +134,7 @@ export const ChapterReader: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isContinuousPlaying && selectedChapterNum <= 13) {
+    if (isContinuousPlaying && selectedChapterNum <= CHAPTERS.length) {
       handleNarrate(currentChapter);
     }
   }, [selectedChapterNum, isContinuousPlaying]);
@@ -166,6 +166,8 @@ export const ChapterReader: React.FC = () => {
       c.content.some((p) => p.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const categories = ['FRONT MATTER', 'MANUSCRIPT CHAPTERS', 'BACK MATTER'] as const;
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
       {/* Scroll Progress Bar (Fixed below Navbar) */}
@@ -186,7 +188,7 @@ export const ChapterReader: React.FC = () => {
             <Search className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
             <input
               type="text"
-              placeholder="Search chapters & telemetry..."
+              placeholder="Search manuscript & telemetry..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 transition-all font-mono"
@@ -195,44 +197,57 @@ export const ChapterReader: React.FC = () => {
 
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-xs font-mono text-cyan-400 tracking-wider">TABLE OF CONTENTS</span>
-            <span className="text-[10px] font-mono text-slate-500">13 CHAPTERS</span>
+            <span className="text-[10px] font-mono text-slate-500">{CHAPTERS.length} SECTIONS</span>
           </div>
 
-          <div className="space-y-1.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1 custom-scrollbar">
-            {filteredChapters.map((chap) => {
-              const isSelected = chap.number === selectedChapterNum;
-              const isBookmarked = bookmarks.includes(chap.number);
+          {/* Grouped Table of Contents */}
+          <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-1 custom-scrollbar">
+            {categories.map((category) => {
+              const itemsInCategory = filteredChapters.filter((c) => c.displayCategory === category);
+              if (itemsInCategory.length === 0) return null;
+
               return (
-                <button
-                  key={chap.number}
-                  onClick={() => {
-                    soundEngine.playClick();
-                    setSelectedChapterNum(chap.number);
-                  }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between group ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/40 text-cyan-300 shadow-lg'
-                      : 'hover:bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 truncate">
-                    <span className="font-mono text-xs text-cyan-400 shrink-0">
-                      {String(chap.number).padStart(2, '0')}
-                    </span>
-                    <span className="text-xs font-medium truncate">{chap.title}</span>
+                <div key={category} className="space-y-1.5">
+                  <div className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest px-2 pt-1 border-t border-slate-800/60 first:border-t-0">
+                    {category}
                   </div>
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleBookmark(chap.number);
-                    }}
-                    className={`p-1 rounded hover:bg-slate-700/50 transition-colors ${
-                      isBookmarked ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'
-                    }`}
-                  >
-                    <Bookmark className="w-3.5 h-3.5 fill-current" />
-                  </div>
-                </button>
+                  {itemsInCategory.map((chap) => {
+                    const isSelected = chap.number === selectedChapterNum;
+                    const isBookmarked = bookmarks.includes(chap.number);
+                    return (
+                      <button
+                        key={chap.number}
+                        onClick={() => {
+                          soundEngine.playClick();
+                          setSelectedChapterNum(chap.number);
+                        }}
+                        className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between group ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/40 text-cyan-300 shadow-lg'
+                            : 'hover:bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 truncate">
+                          <span className="font-mono text-xs text-cyan-400 shrink-0">
+                            {String(chap.number).padStart(2, '0')}
+                          </span>
+                          <span className="text-xs font-medium truncate">{chap.title}</span>
+                        </div>
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleBookmark(chap.number);
+                          }}
+                          className={`p-1 rounded hover:bg-slate-700/50 transition-colors ${
+                            isBookmarked ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'
+                          }`}
+                        >
+                          <Bookmark className="w-3.5 h-3.5 fill-current" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               );
             })}
           </div>
@@ -308,7 +323,7 @@ export const ChapterReader: React.FC = () => {
               className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
             >
               <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
-              {isNarrating && !isContinuousPlaying ? 'Synthesizing...' : 'Narrate Chapter'}
+              {isNarrating && !isContinuousPlaying ? 'Synthesizing...' : 'Narrate Section'}
             </button>
 
             {isContinuousPlaying ? (
@@ -317,7 +332,7 @@ export const ChapterReader: React.FC = () => {
                 className="px-4 py-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
               >
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                Stop Narrate All (1-13)
+                Stop Autoplay
               </button>
             ) : (
               <button
@@ -325,7 +340,7 @@ export const ChapterReader: React.FC = () => {
                 className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
               >
                 <Play className="w-4 h-4 text-cyan-400" />
-                Narrate All (1-13)
+                Narrate Full Book
               </button>
             )}
 
@@ -350,7 +365,9 @@ export const ChapterReader: React.FC = () => {
               </div>
               <div>
                 <span className="text-xs font-mono font-bold text-emerald-300 block">
-                  {isContinuousPlaying ? `NARRATING CHAPTER ${selectedChapterNum}/13 (AUTO-ADVANCING @ ${ttsSpeed}x)` : `ELON VOICE NARRATION READY (@ ${ttsSpeed}x)`}
+                  {isContinuousPlaying
+                    ? `NARRATING SECTION ${selectedChapterNum}/${CHAPTERS.length} (AUTO-ADVANCING @ ${ttsSpeed}x)`
+                    : `ELON VOICE NARRATION READY (@ ${ttsSpeed}x)`}
                 </span>
                 <span className="text-[10px] font-mono text-slate-400">Includes dramatic pauses & satirical commentary</span>
               </div>
@@ -363,12 +380,45 @@ export const ChapterReader: React.FC = () => {
         <article ref={articleRef} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-8 lg:p-12 backdrop-blur-md shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
+          {/* Book Cover Banner (Rendered on Title Page / Section 1) */}
+          {currentChapter.coverImage && (
+            <div className="mb-10 flex flex-col md:flex-row items-center gap-8 bg-slate-950/80 p-6 md:p-8 rounded-2xl border border-cyan-500/40 shadow-2xl relative overflow-hidden">
+              <div className="w-56 sm:w-64 shrink-0 rounded-xl overflow-hidden border-2 border-cyan-500/50 shadow-[0_0_35px_rgba(6,182,212,0.3)] group">
+                <img
+                  src={currentChapter.coverImage}
+                  alt="Elon Musk: The End Justifies the Means by Nathaniel Mina"
+                  className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-mono">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>OFFICIAL COVER & FIRST EDITION</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-bold font-sans text-white tracking-tight">
+                  Elon Musk: The End Justifies the Means
+                </h2>
+                <p className="text-base font-mono text-cyan-300 italic border-l-2 border-cyan-500 pl-3">
+                  "Physics is the law; everything else is a recommendation."
+                </p>
+                <div className="text-sm font-mono text-slate-300">
+                  Written by <span className="text-emerald-400 font-bold">Nathaniel Mina (The Author)</span>
+                </div>
+                <div className="text-xs font-mono text-slate-500 pt-2 border-t border-slate-800 space-y-1">
+                  <div>Publisher: Starbase Orbital Press & Cyberdyne Literary Syndicate</div>
+                  <div>Format: Neural Stream, Hardcover & Complete Manuscript</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Chapter Header */}
           <div className="mb-8 border-b border-slate-800 pb-6">
             <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-2">
-              <span>CHAPTER {String(currentChapter.number).padStart(2, '0')}</span>
-              <span>/</span>
-              <span>13</span>
+              <span className="uppercase">{currentChapter.displayCategory}</span>
+              <span>·</span>
+              <span>SECTION {String(currentChapter.number).padStart(2, '0')} OF {CHAPTERS.length}</span>
             </div>
             <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-100 mb-2 font-sans">
               {currentChapter.title}
@@ -466,7 +516,7 @@ export const ChapterReader: React.FC = () => {
 
           {/* Chapter Navigation Control Bar */}
           <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-stretch justify-between gap-4">
-            {/* Previous Chapter Link */}
+            {/* Previous Section Link */}
             {selectedChapterNum > 1 ? (
               <button
                 onClick={() => {
@@ -480,7 +530,7 @@ export const ChapterReader: React.FC = () => {
                   <ChevronLeft className="w-6 h-6" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Previous Chapter</div>
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Previous Section</div>
                   <div className="text-sm font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors truncate">
                     {CHAPTERS.find(c => c.number === selectedChapterNum - 1)?.title}
                   </div>
@@ -488,8 +538,8 @@ export const ChapterReader: React.FC = () => {
               </button>
             ) : <div className="flex-1" />}
 
-            {/* Next Chapter Link */}
-            {selectedChapterNum < 13 ? (
+            {/* Next Section Link */}
+            {selectedChapterNum < CHAPTERS.length ? (
               <button
                 onClick={() => {
                   soundEngine.playClick();
@@ -499,7 +549,7 @@ export const ChapterReader: React.FC = () => {
                 className="flex-1 group flex items-center justify-end gap-4 p-4 rounded-2xl bg-slate-950/40 border border-slate-800/60 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all text-right"
               >
                 <div className="min-w-0">
-                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Next Chapter</div>
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Next Section</div>
                   <div className="text-sm font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors truncate">
                     {CHAPTERS.find(c => c.number === selectedChapterNum + 1)?.title}
                   </div>

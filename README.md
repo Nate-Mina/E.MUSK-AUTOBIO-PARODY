@@ -1,6 +1,11 @@
 # ELON MUSK: The End Justifies the Means
 
-> *"Physics is the law; everything else is a recommendation."*
+> *"Physics is the law; everything else is a recommendation."*  
+> **By Nathaniel Mina (The Author)**
+
+<p align="center">
+  <img src="public/assets/aistudio/Gemini_Generated_Image_us5l8vus5l8vus5l_4e470d72.jpg" alt="Elon Musk: The End Justifies the Means Book Cover" width="380" style="border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+</p>
 
 A full-length, dark-comedy satirical mock-autobiography and interactive digital reading experience chronicling the life, existential crucibles, high-stakes gambles, and megalomaniacal philosophy of the world's most polarizing techno-autocrat.
 
@@ -8,7 +13,7 @@ A full-length, dark-comedy satirical mock-autobiography and interactive digital 
 
 ## 📖 Book Description
 
-Written from the first-person perspective of a man who views his own consciousness as an optimized operating system and human biology as a bloated legacy codebase, **ELON MUSK: The End Justifies the Means** is an unhinged, darkly comedic deep-dive into the mythos of modern Silicon Valley capitalism.
+Written by **Nathaniel Mina (The Author)** from the first-person perspective of a man who views his own consciousness as an optimized operating system and human biology as a bloated legacy codebase, **ELON MUSK: The End Justifies the Means** is an unhinged, darkly comedic deep-dive into the mythos of modern Silicon Valley capitalism.
 
 From surviving schoolyard violence in Pretoria by "garbage-collecting trauma" to dropping out of a Stanford PhD after forty-eight hours, sleeping on futons at Zip2, crashing an uninsured $1,000,000 McLaren F1 with Peter Thiel, enduring three consecutive rocket explosions in the Pacific, and paying over $76,000,000 in divorce settlements to seed the Martian workforce—this book reframes every catastrophic failure as an *"Unplanned Rapid Disassembly"* that yielded valuable telemetry.
 
@@ -16,8 +21,18 @@ Equal parts parody, biographical drama, and philosophical manifesto, this work e
 
 ---
 
-## 📚 Table of Contents (13 Canonical Chapters)
+## 📚 Complete Book Structure (18 Sections)
 
+### Front Matter
+- **Title Page & Official Cover**:
+  > **Elon Musk: The End Justifies the Means**  
+  > *"Physics is the law; everything else is a recommendation."*  
+  > **Nathaniel Mina (The Author)**  
+  *(Includes ISBN: 978-0-420-69420-1, Starbase Publishing colophon, and Dedication)*
+- **Preface: The Biographer's Hazard**: By Nathaniel Mina (The Author) on surviving the editorial velocity of a techno-autocrat.
+- **Introduction: User Manual for My Operating System**: By Elon Musk on how to compile human wetware at maximum clock speed.
+
+### Manuscript Chapters (1–13)
 1. **Chapter 1: First Principles of a Cosmic Entity**  
    *Early life framed as a simulation benchmark test, schoolyard collisions, selling Blastar for $500, manual labor in Canadian sawmills, and the 48-hour Stanford PhD.*
 
@@ -56,6 +71,10 @@ Equal parts parody, biographical drama, and philosophical manifesto, this work e
 
 13. **Chapter 13: Mars as a Tax Haven for the Soul**  
     *The grand finale: Abandoning Earth's regulatory drag for Starbase Mars, atmospheric oxygen quotas, and building an immortal red citadel.*
+
+### Back Matter
+- **Quotes Appendix: Canonical Telemetry & Apocrypha**: The ultimate compendium of real and dramatized axioms, keynotes, regulatory defiance, and Mars proclamations.
+- **About the Author & Acknowledgments**: Biography of Nathaniel Mina (The Author) and his acknowledgments to physics, SpaceX launch control, and industrial espresso.
 
 ---
 
