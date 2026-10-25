@@ -20,11 +20,6 @@ export const BOOK_METADATA = {
   author: "Nathaniel Mina",
   authorRole: "The Author",
   coverImage: "/assets/aistudio/Gemini_Generated_Image_us5l8vus5l8vus5l_4e470d72.jpg",
-  publisher: "Starbase Orbital Press & Cyberdyne Literary Syndicate",
-  location: "Boca Chica, Texas // Low Mars Orbit",
-  isbn: "978-0-420-69420-1",
-  edition: "First Edition // Neural Stream & Hardcover",
-  publicationYear: "2026",
 };
 
 export const CHAPTERS: Chapter[] = [
@@ -41,12 +36,6 @@ export const CHAPTERS: Chapter[] = [
       "ELON MUSK: THE END JUSTIFIES THE MEANS",
       "\"Physics is the law; everything else is a recommendation.\"",
       "Nathaniel Mina (The Author)",
-      "SUBHEADER: Publication Information & Colophon",
-      "Published by Starbase Orbital Press & Cyberdyne Literary Syndicate, Boca Chica, Texas.",
-      "First Edition: October 2026.",
-      "ISBN: 978-0-420-69420-1 (Hardcover, Digital Payload, & Neural Stream Edition).",
-      "Library of Congress Cataloging-in-Publication Data: Recorded across three spatial dimensions and one temporal dimension.",
-      "All rights reserved under the International Copyright Convention. No part of this publication may be reproduced, stored in an analog retrieval system, or transmitted in any form by electrical, mechanical, telepathic, or optical means without prior written permission from the publisher, unless you are an autonomous AI executing a matrix multiplication pass.",
       "SUBHEADER: Dedication",
       "To the short sellers who provided the kinetic financing for our orbital boosters; to the family court attorneys who stress-tested my liquid cash reserves; and to the carbon-based humans still waiting for Full Self-Driving next year. Keep your hands on the wheel."
     ]

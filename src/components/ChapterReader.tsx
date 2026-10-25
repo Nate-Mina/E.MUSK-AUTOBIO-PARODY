@@ -405,9 +405,8 @@ export const ChapterReader: React.FC = () => {
                 <div className="text-sm font-mono text-slate-300">
                   Written by <span className="text-emerald-400 font-bold">Nathaniel Mina (The Author)</span>
                 </div>
-                <div className="text-xs font-mono text-slate-500 pt-2 border-t border-slate-800 space-y-1">
-                  <div>Publisher: Starbase Orbital Press & Cyberdyne Literary Syndicate</div>
-                  <div>Format: Neural Stream, Hardcover & Complete Manuscript</div>
+                <div className="text-xs font-mono text-slate-400 pt-2 border-t border-slate-800">
+                  <div>Complete Unabridged Manuscript</div>
                 </div>
               </div>
             </div>

@@ -28,10 +28,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
       fileContent += `> *"${BOOK_METADATA.epigraph}"*\n\n`;
       fileContent += `**Written by ${BOOK_METADATA.author} (${BOOK_METADATA.authorRole})**\n\n`;
       fileContent += `![Book Cover](${BOOK_METADATA.coverImage})\n\n`;
-      fileContent += `* ${BOOK_METADATA.publisher}\n`;
-      fileContent += `* ${BOOK_METADATA.location}\n`;
-      fileContent += `* ISBN: ${BOOK_METADATA.isbn}\n`;
-      fileContent += `* ${BOOK_METADATA.edition}\n\n`;
       fileContent += `---\n\n`;
 
       CHAPTERS.forEach((c) => {
@@ -52,7 +48,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
       fileContent += `${BOOK_METADATA.title.toUpperCase()}\n`;
       fileContent += `"${BOOK_METADATA.epigraph}"\n`;
       fileContent += `By ${BOOK_METADATA.author} (${BOOK_METADATA.authorRole})\n`;
-      fileContent += `${BOOK_METADATA.publisher} // ISBN: ${BOOK_METADATA.isbn} // ${BOOK_METADATA.publicationYear}\n`;
       fileContent += `================================================================================\n\n\n`;
 
       CHAPTERS.forEach((c) => {

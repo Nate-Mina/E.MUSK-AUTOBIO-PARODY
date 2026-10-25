@@ -28,7 +28,7 @@ Equal parts parody, biographical drama, and philosophical manifesto, this work e
   > **Elon Musk: The End Justifies the Means**  
   > *"Physics is the law; everything else is a recommendation."*  
   > **Nathaniel Mina (The Author)**  
-  *(Includes ISBN: 978-0-420-69420-1, Starbase Publishing colophon, and Dedication)*
+  *(Includes Author Epigraph and Dedication)*
 - **Preface: The Biographer's Hazard**: By Nathaniel Mina (The Author) on surviving the editorial velocity of a techno-autocrat.
 - **Introduction: User Manual for My Operating System**: By Elon Musk on how to compile human wetware at maximum clock speed.
 

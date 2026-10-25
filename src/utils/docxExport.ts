@@ -67,37 +67,13 @@ export async function generateDocxBlob(): Promise<Blob> {
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 800 },
+      spacing: { after: 1200 },
       children: [
         new TextRun({
           text: `By ${BOOK_METADATA.author} (${BOOK_METADATA.authorRole})`,
           bold: true,
           size: 26, // 13pt
           color: '003366',
-          font: 'Arial',
-        }),
-      ],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 100 },
-      children: [
-        new TextRun({
-          text: BOOK_METADATA.publisher,
-          size: 18,
-          color: '777777',
-          font: 'Arial',
-        }),
-      ],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 400 },
-      children: [
-        new TextRun({
-          text: `${BOOK_METADATA.location} · ISBN: ${BOOK_METADATA.isbn} · ${BOOK_METADATA.publicationYear}`,
-          size: 16,
-          color: '888888',
           font: 'Arial',
         }),
       ],
