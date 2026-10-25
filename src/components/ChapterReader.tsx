@@ -19,26 +19,31 @@ export const ChapterReader: React.FC = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
   const [isContinuousPlaying, setIsContinuousPlaying] = useState<boolean>(false);
+  const [ttsSpeed, setTtsSpeed] = useState<number>(1);
 
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const articleRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
+      if (!articleRef.current) return;
+      const article = articleRef.current;
+      const rect = article.getBoundingClientRect();
+      const articleHeight = article.offsetHeight;
       const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const scrollY = window.scrollY;
-      
-      const scrollableHeight = documentHeight - windowHeight;
-      if (scrollableHeight <= 0) {
+
+      const totalScrollable = articleHeight - windowHeight;
+      if (totalScrollable <= 0) {
         setScrollProgress(100);
         return;
       }
-      
-      const progress = Math.min(100, Math.max(0, (scrollY / scrollableHeight) * 100));
+
+      const scrolled = -rect.top;
+      const progress = Math.min(100, Math.max(0, (scrolled / totalScrollable) * 100));
       setScrollProgress(Math.round(progress));
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
@@ -56,6 +61,10 @@ export const ChapterReader: React.FC = () => {
     const savedAuto = localStorage.getItem('elon_auto_advance');
     if (savedAuto !== null) {
       setAutoAdvance(savedAuto === 'true');
+    }
+    const savedSpeed = localStorage.getItem('elon_tts_speed');
+    if (savedSpeed !== null) {
+      setTtsSpeed(parseFloat(savedSpeed));
     }
   }, []);
 
@@ -100,6 +109,7 @@ export const ChapterReader: React.FC = () => {
         setAudioUrl(url);
 
         const audio = new Audio(url);
+        audio.playbackRate = ttsSpeed;
         activeAudioRef.current = audio;
 
         audio.onended = () => {
@@ -123,7 +133,6 @@ export const ChapterReader: React.FC = () => {
     }
   };
 
-  // Trigger narration automatically when continuous playing and chapter changes
   useEffect(() => {
     if (isContinuousPlaying && selectedChapterNum <= 12) {
       handleNarrate(currentChapter);
@@ -257,6 +266,29 @@ export const ChapterReader: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {/* TTS Speed Controls */}
+            <div className="flex items-center gap-1 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+              <span className="text-[10px] font-mono text-slate-400 mr-1">SPEED:</span>
+              {[1, 1.25, 1.5, 2].map((speed) => (
+                <button
+                  key={speed}
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setTtsSpeed(speed);
+                    localStorage.setItem('elon_tts_speed', String(speed));
+                    if (activeAudioRef.current) {
+                      activeAudioRef.current.playbackRate = speed;
+                    }
+                  }}
+                  className={`px-2 py-0.5 text-xs font-mono rounded transition-all ${
+                    ttsSpeed === speed ? 'bg-cyan-500 text-slate-950 font-bold shadow' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {speed}x
+                </button>
+              ))}
+            </div>
+
             <label className="flex items-center gap-2 cursor-pointer bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 text-xs font-mono text-slate-300">
               <input
                 type="checkbox"
@@ -318,7 +350,7 @@ export const ChapterReader: React.FC = () => {
               </div>
               <div>
                 <span className="text-xs font-mono font-bold text-emerald-300 block">
-                  {isContinuousPlaying ? `NARRATING CHAPTER ${selectedChapterNum} (AUTO-ADVANCING)` : 'ELON VOICE NARRATION READY'}
+                  {isContinuousPlaying ? `NARRATING CHAPTER ${selectedChapterNum}/12 (AUTO-ADVANCING @ ${ttsSpeed}x)` : `ELON VOICE NARRATION READY (@ ${ttsSpeed}x)`}
                 </span>
                 <span className="text-[10px] font-mono text-slate-400">Includes dramatic pauses & satirical commentary</span>
               </div>
@@ -328,7 +360,7 @@ export const ChapterReader: React.FC = () => {
         )}
 
         {/* Chapter Prose Container */}
-        <article className="bg-slate-900/80 border border-slate-800 rounded-2xl p-8 lg:p-12 backdrop-blur-md shadow-2xl relative overflow-hidden">
+        <article ref={articleRef} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-8 lg:p-12 backdrop-blur-md shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
           {/* Chapter Header */}
