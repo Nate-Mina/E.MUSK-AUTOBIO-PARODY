@@ -3,18 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, Footer, PageNumber, NumberFormat } from 'docx';
 import { CHAPTERS, BOOK_METADATA } from '../data/chapters';
 
 export async function generateDocxBlob(): Promise<Blob> {
-  const children: Paragraph[] = [];
+  const frontMatterChildren: Paragraph[] = [];
+  const manuscriptChildren: Paragraph[] = [];
+
+  // Helper to determine destination section
+  const getTargetArray = (sectionType: string): Paragraph[] => {
+    return sectionType === 'frontmatter' ? frontMatterChildren : manuscriptChildren;
+  };
 
   // 1. Cover Page with High-Resolution Embedded Cover Image
   try {
     const coverResp = await fetch(BOOK_METADATA.coverImage);
     if (coverResp.ok) {
       const coverBuffer = await coverResp.arrayBuffer();
-      children.push(
+      frontMatterChildren.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
           spacing: { before: 100, after: 200 },
@@ -36,7 +42,7 @@ export async function generateDocxBlob(): Promise<Blob> {
   }
 
   // 2. Formal Interior Title Page
-  children.push(
+  frontMatterChildren.push(
     new Paragraph({
       pageBreakBefore: true,
       alignment: AlignmentType.CENTER,
@@ -85,14 +91,15 @@ export async function generateDocxBlob(): Promise<Blob> {
     // Skip re-rendering Section 1 as raw text since it is already formatted as the formal Title Page above
     if (c.number === 1) continue;
 
+    const targetList = getTargetArray(c.sectionType);
     const isChapter = c.sectionType === 'chapter';
     const isToc = c.id === 'table-of-contents';
     const headingText = c.title.toUpperCase();
 
     // Section Header
-    children.push(
+    targetList.push(
       new Paragraph({
-        pageBreakBefore: true,
+        pageBreakBefore: c.number !== 5, // Section 5 is the first page of the new manuscript section
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 400, after: 120 },
         children: [
@@ -129,7 +136,7 @@ export async function generateDocxBlob(): Promise<Blob> {
           const imgResp = await fetch(imgSrc);
           if (imgResp.ok) {
             const imgBuffer = await imgResp.arrayBuffer();
-            children.push(
+            targetList.push(
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 spacing: { before: 240, after: 120 },
@@ -164,7 +171,7 @@ export async function generateDocxBlob(): Promise<Blob> {
         }
       } else if (para.startsWith('SUBHEADER: ')) {
         const subheaderTitle = para.replace('SUBHEADER: ', '');
-        children.push(
+        targetList.push(
           new Paragraph({
             heading: HeadingLevel.HEADING_2,
             spacing: { before: 240, after: 120 },
@@ -180,7 +187,7 @@ export async function generateDocxBlob(): Promise<Blob> {
           })
         );
       } else if (para.startsWith('- ')) {
-        children.push(
+        targetList.push(
           new Paragraph({
             bullet: { level: 0 },
             spacing: { after: 100 },
@@ -199,7 +206,7 @@ export async function generateDocxBlob(): Promise<Blob> {
             .split('|')
             .map((s) => s.trim())
             .filter(Boolean);
-          children.push(
+          targetList.push(
             new Paragraph({
               spacing: { after: 80 },
               children: [
@@ -214,7 +221,7 @@ export async function generateDocxBlob(): Promise<Blob> {
           );
         }
       } else if (para.includes('=') && (para.includes('/') || para.includes('^') || para.includes('-'))) {
-        children.push(
+        targetList.push(
           new Paragraph({
             alignment: AlignmentType.CENTER,
             spacing: { before: 180, after: 180 },
@@ -230,7 +237,7 @@ export async function generateDocxBlob(): Promise<Blob> {
           })
         );
       } else {
-        children.push(
+        targetList.push(
           new Paragraph({
             spacing: { after: 160 },
             children: [
@@ -246,11 +253,66 @@ export async function generateDocxBlob(): Promise<Blob> {
     }
   }
 
+  // Dual-section document:
+  // Section 1: Front Matter with Roman numerals (I, II, III, IV, ...)
+  // Section 2: Chapters 1-13 & Back Matter with Arabic numerals starting at Page 1!
   const doc = new Document({
     sections: [
       {
-        properties: {},
-        children,
+        properties: {
+          page: {
+            pageNumbers: {
+              start: 1,
+              formatType: NumberFormat.UPPER_ROMAN,
+            },
+          },
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    children: [PageNumber.CURRENT],
+                    font: 'Georgia',
+                    size: 20,
+                    color: '555555',
+                  }),
+                ],
+              }),
+            ],
+          }),
+        },
+        children: frontMatterChildren,
+      },
+      {
+        properties: {
+          page: {
+            pageNumbers: {
+              start: 1,
+              formatType: NumberFormat.DECIMAL,
+            },
+          },
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    children: [PageNumber.CURRENT],
+                    font: 'Georgia',
+                    size: 20,
+                    color: '555555',
+                  }),
+                ],
+              }),
+            ],
+          }),
+        },
+        children: manuscriptChildren,
       },
     ],
   });

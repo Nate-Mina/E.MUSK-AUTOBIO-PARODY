@@ -19,6 +19,8 @@ export interface Chapter {
   content: string[];
   coverImage?: string;
   illustration?: ChapterIllustration;
+  pageNumber: string;
+  pageRange: string;
 }
 
 export const BOOK_METADATA = {
@@ -36,6 +38,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'title-page',
     sectionType: 'frontmatter',
     displayCategory: 'FRONT MATTER',
+    pageNumber: "I",
+    pageRange: "p. I",
     title: "Title Page & Book Cover",
     subtitle: "Elon Musk: The End Justifies the Means · Nathaniel Mina (The Author)",
     coverImage: "/assets/aistudio/Gemini_Generated_Image_us5l8vus5l8vus5l_4e470d72.jpg",
@@ -56,45 +60,48 @@ export const CHAPTERS: Chapter[] = [
     id: 'table-of-contents',
     sectionType: 'frontmatter',
     displayCategory: 'FRONT MATTER',
+    pageNumber: "II",
+    pageRange: "p. II",
     title: "Table of Contents",
     subtitle: "Complete Architectural Index of the Manuscript · 13 Chapters & Curated Appendices",
     content: [
-      "SUBHEADER: Part I: Foundations & Early Exothermic Calibrations",
-      "- Section 01 · Title Page & Official Cover Art (p. 1)",
-      "- Section 02 · Table of Contents & Master Manuscript Index (p. 3)",
-      "- Section 03 · Preface: The Biographer's Hazard by Nathaniel Mina (p. 5)",
-      "- Section 04 · Introduction: User Manual for My Operating System by Elon Musk (p. 9)",
-      "- Section 05 · Chapter 1: First Principles of a Cosmic Entity (pp. 13–24)",
+      "SUBHEADER: Front Matter (Numbered in Roman Numerals: I–VI)",
+      "- Section 01 · Title Page & Official Cover Art (p. I)",
+      "- Section 02 · Table of Contents & Master Manuscript Index (p. II)",
+      "- Section 03 · Preface: The Biographer's Hazard by Nathaniel Mina (pp. III–IV)",
+      "- Section 04 · Introduction: User Manual for My Operating System by Elon Musk (pp. V–VI)",
+      "SUBHEADER: Part I: Foundations & Early Exothermic Calibrations (Starts at Page 1)",
+      "- Section 05 · Chapter 1: First Principles of a Cosmic Entity (pp. 1–12)",
       "  Pretoria simulation benchmark, Blastar liquidity event, Queen's University futon, sawmill boiler sludge, Stanford 48-hour PhD drop, YMCA shower protocols, and the fundamental First-Principles equation.",
-      "- Section 06 · Chapter 2: Silicon Valley Bloodbath & The PayPal Coup (pp. 25–36)",
+      "- Section 06 · Chapter 2: Silicon Valley Bloodbath & The PayPal Coup (pp. 13–24)",
       "  X.com origins, uninsured McLaren F1 crash with Peter Thiel, Confinity merger war, Levchin Windows NT holy war, honeymoon flight coup, $165M eBay liquidation, and Thiel's seasteading delusions.",
-      "- Section 07 · Chapter 3: Kwajalein Atoll & The $100 Million Gamble (pp. 37–48)",
+      "- Section 07 · Chapter 3: Kwajalein Atoll & The $100 Million Gamble (pp. 25–36)",
       "  Moscow ICBM spit negotiations, raw aluminum rocketry, Kwajalein coral island exile, Flights 1–3 fiery disintegrations, 2008 Christmas Eve bankruptcy brink, Flight 4 orbit, and the $1.6B NASA contract.",
       "SUBHEADER: Part II: Industrial Scaling & The Cost of Velocity",
-      "- Section 08 · Chapter 4: The Gospel of Unplanned Rapid Disassembly (pp. 49–60)",
+      "- Section 08 · Chapter 4: The Gospel of Unplanned Rapid Disassembly (pp. 37–48)",
       "  Autonomous sea landings on drone ships, Boca Chica stainless steel welding tents, SN8–SN11 belly-flop explosions, Mechazilla chopstick booster catches, and mocking Jeff Bezos's orbital lawsuits.",
-      "- Section 09 · Chapter 5: The Liquidation of Domestic Capital (pp. 61–74)",
+      "- Section 09 · Chapter 5: The Liquidation of Domestic Capital (pp. 49–62)",
       "  Demographic collapse mitigation, Justine Wilson $20M settlement, Talulah Riley dual-pass simulation ($20.2M), Grimes Rococo Basilisk courtship, alphanumeric offspring, family court extortion, and the $76.5M Forensic Settlement Ledger (Embedded High-Contrast JPG Diagram).",
-      "- Section 10 · Chapter 6: The Math Doesn't Lie (Unless It's Inefficient) (pp. 75–86)",
+      "- Section 10 · Chapter 6: The Math Doesn't Lie (Unless It's Inefficient) (pp. 63–74)",
       "  Schedule Compression dynamics, negative aerodynamic drag, deleting 400 assembly robots, Gigapress stamping, and terminating academic consultants citing the Second Law of Thermodynamics.",
-      "- Section 11 · Chapter 7: The Island Protocol (pp. 87–98)",
+      "- Section 11 · Chapter 7: The Island Protocol (pp. 75–86)",
       "  Little Saint James off-grid capital briefings with Jeffrey Epstein, subterranean leverage, sovereign wealth networks, and unmasking legacy billionaire philanthropy as tax-sheltered guilt.",
       "SUBHEADER: Part III: Digital Panopticon, AI & The Martian Imperative",
-      "- Section 12 · Chapter 8: The Fremont Production Purgatory (pp. 99–112)",
+      "- Section 12 · Chapter 8: The Fremont Production Purgatory (pp. 87–100)",
       "  Model 3 factory floor sleeping, general assembly tents (GA4), parking lot firings, the $420 funding secured tweet storm, SEC warfare, short seller decimation, and red satin Short Shorts.",
-      "- Section 13 · Chapter 9: The $44 Billion Sinkhole & The Digital Panopticon (pp. 113–126)",
+      "- Section 13 · Chapter 9: The $44 Billion Sinkhole & The Digital Panopticon (pp. 101–114)",
       "  Porcelain sink entrance at Twitter HQ, firing Agrawal and Gadde on minute one, print-out code reviews, firing 80% of staff, renaming to X, DealBook advertiser warfare, and the Colosseum cage match challenge to Mark Zuckerberg.",
-      "- Section 14 · Chapter 10: The Meatware Upgrade (Neuralink & The Borg Fleet) (pp. 127–140)",
+      "- Section 14 · Chapter 10: The Meatware Upgrade (Neuralink & The Borg Fleet) (pp. 115–128)",
       "  Cortical bandwidth limitations, surgical robot threads, primate mind-Pong, human Telepathy trials, the Sam Altman betrayal feud, and constructing the 100,000 H100 Colossus cluster in Memphis.",
-      "- Section 15 · Chapter 11: The Red Planet Manifest Destiny (pp. 141–154)",
+      "- Section 15 · Chapter 11: The Red Planet Manifest Destiny (pp. 129–142)",
       "  Fermi Paradox resolution, Earth single-point failure liabilities, terraforming poles with thermonuclear warheads, 1,000-Starship armada, Martian direct democracy, and the mandatory 84-hour colony shift.",
-      "- Section 16 · Chapter 12: The Autonomous Swarm & The End of Labor (pp. 155–168)",
+      "- Section 16 · Chapter 12: The Autonomous Swarm & The End of Labor (pp. 143–156)",
       "  LiDAR bans, pure vision FSD architecture, Cybercab un-crewed reveal, Optimus humanoid assembly fleets, elimination of manual labor, and legacy automakers as walking corpses.",
-      "- Section 17 · Chapter 13: The Apotheosis of Capital (pp. 169–182)",
+      "- Section 17 · Chapter 13: The Apotheosis of Capital (pp. 157–170)",
       "  Richest biological entity in recorded history, Delaware Chancery Court $56B compensation voiding, Texas corporate relocation, DOGE bureaucratic reduction chainsaw, and the final cosmological verdict.",
       "SUBHEADER: Part IV: Appendices & Author Bio",
-      "- Section 18 · Appendix: Canonical Quotations & Maxim Ledger (pp. 183–188)",
-      "- Section 19 · About the Author: Nathaniel Mina (pp. 189–190)"
+      "- Section 18 · Appendix: Canonical Quotations & Maxim Ledger (pp. 171–176)",
+      "- Section 19 · About the Author: Nathaniel Mina (pp. 177–178)"
     ]
   },
 
@@ -104,6 +111,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'preface',
     sectionType: 'frontmatter',
     displayCategory: 'FRONT MATTER',
+    pageNumber: "III",
+    pageRange: "pp. III–IV",
     title: "Preface: The Biographer's Hazard",
     subtitle: "By Nathaniel Mina (The Author) — On the perils of transcribing a hyper-accelerated ego.",
     content: [
@@ -129,6 +138,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'introduction',
     sectionType: 'frontmatter',
     displayCategory: 'FRONT MATTER',
+    pageNumber: "V",
+    pageRange: "pp. V–VI",
     title: "Introduction: User Manual for My Operating System",
     subtitle: "By Elon Musk — An orientation for carbon-based biological units before system boot.",
     content: [
@@ -153,6 +164,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-1',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "1",
+    pageRange: "pp. 1–12",
     title: "Chapter 1: First Principles of a Cosmic Entity",
     subtitle: "Early life framed as a simulation benchmark test and the birth of relentless optimization.",
     illustration: {
@@ -195,6 +208,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-2',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "13",
+    pageRange: "pp. 13–24",
     title: "Chapter 2: Silicon Valley Bloodbath & The PayPal Coup",
     subtitle: "X.com, crashing an uninsured McLaren F1 with Peter Thiel, and the art of surviving boardroom treason.",
     illustration: {
@@ -238,6 +253,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-3',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "25",
+    pageRange: "pp. 25–36",
     title: "Chapter 3: Kwajalein Atoll & The $100 Million Gamble",
     subtitle: "Moscow ICBM negotiations, coral island exile, and the razor-thin wire of orbital bankruptcy.",
     illustration: {
@@ -282,6 +299,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-4',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "37",
+    pageRange: "pp. 37–48",
     title: "Chapter 4: The Gospel of Unplanned Rapid Disassembly",
     subtitle: "Starbase, the drone ship landings, and turning rocket explosions into sacred telemetry.",
     illustration: {
@@ -322,6 +341,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-5',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "49",
+    pageRange: "pp. 49–62",
     title: "Chapter 5: The Liquidation of Domestic Capital",
     subtitle: "Wives, settlements, custody ledgers, and treating domestic reproduction as high-bandwidth throughput.",
     illustration: {
@@ -377,6 +398,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-6',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "63",
+    pageRange: "pp. 63–74",
     title: "Chapter 6: The Math Doesn't Lie (Unless It's Inefficient)",
     subtitle: "Genius-level physics breakdowns that violate basic thermodynamics and union rules.",
     illustration: {
@@ -416,6 +439,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-7',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "75",
+    pageRange: "pp. 75–86",
     title: "Chapter 7: The Island Protocol",
     subtitle: "A boastful and bizarre account of confidential briefings on Little Saint James.",
     illustration: {
@@ -445,6 +470,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-8',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "87",
+    pageRange: "pp. 87–100",
     title: "Chapter 8: The Fremont Production Purgatory",
     subtitle: "Model 3 ramp hell, sleeping on factory floors, and vaporizing short sellers with red satin shorts.",
     illustration: {
@@ -481,6 +508,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-9',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "101",
+    pageRange: "pp. 101–114",
     title: "Chapter 9: The $44 Billion Sinkhole & The Digital Panopticon",
     subtitle: "Carrying a sink into Twitter HQ, firing 80% of staff over a weekend, and the Colosseum cage match challenge.",
     illustration: {
@@ -517,6 +546,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-10',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "115",
+    pageRange: "pp. 115–128",
     title: "Chapter 10: The Meatware Upgrade (Neuralink & The Borg Fleet)",
     subtitle: "Primate mind-Pong, human Telepathy trials, and the scorched-earth war with Sam Altman's closed-source cartel.",
     illustration: {
@@ -551,6 +582,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-11',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "129",
+    pageRange: "pp. 129–142",
     title: "Chapter 11: The Red Planet Manifest Destiny",
     subtitle: "Fermi's paradox, terraforming poles with thermonuclear warheads, and the 1,000-ship Martian armada.",
     illustration: {
@@ -585,6 +618,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-12',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "143",
+    pageRange: "pp. 143–156",
     title: "Chapter 12: The Autonomous Swarm & The End of Labor",
     subtitle: "Banning LiDAR as a crutch, pure-vision FSD, Cybercab, and the Optimus humanoid army.",
     illustration: {
@@ -620,6 +655,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'chap-13',
     sectionType: 'chapter',
     displayCategory: 'MANUSCRIPT CHAPTERS',
+    pageNumber: "157",
+    pageRange: "pp. 157–170",
     title: "Chapter 13: The Apotheosis of Capital",
     subtitle: "The richest biological entity in history, the Delaware Chancery Court rebellion, and the DOGE chainsaw.",
     illustration: {
@@ -659,6 +696,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'quotes-appendix',
     sectionType: 'backmatter',
     displayCategory: 'BACK MATTER',
+    pageNumber: "171",
+    pageRange: "pp. 171–176",
     title: "Appendix: Canonical Quotations & Maxim Ledger",
     subtitle: "A curated index of verified keynote maxims, Twitter aphorisms, and first-principles laws.",
     content: [
@@ -690,6 +729,8 @@ export const CHAPTERS: Chapter[] = [
     id: 'about-author',
     sectionType: 'backmatter',
     displayCategory: 'BACK MATTER',
+    pageNumber: "177",
+    pageRange: "pp. 177–178",
     title: "About the Author: Nathaniel Mina",
     subtitle: "Biographer, chronicler, and survivor of the hyper-accelerated Musk operational orbit.",
     content: [

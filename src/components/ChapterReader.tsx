@@ -228,9 +228,15 @@ export const ChapterReader: React.FC = () => {
                             : 'hover:bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-transparent'
                         }`}
                       >
-                        <div className="flex items-center gap-2.5 truncate">
-                          <span className="font-mono text-xs text-cyan-400 shrink-0">
-                            {String(chap.number).padStart(2, '0')}
+                        <div className="flex items-center gap-2 truncate">
+                          <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded border shrink-0 font-bold ${
+                            chap.sectionType === 'frontmatter'
+                              ? 'bg-amber-950/50 border-amber-500/40 text-amber-300'
+                              : chap.sectionType === 'chapter'
+                              ? 'bg-cyan-950/60 border-cyan-500/30 text-cyan-300'
+                              : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+                          }`}>
+                            p. {chap.pageNumber}
                           </span>
                           <span className="text-xs font-medium truncate">{chap.title}</span>
                         </div>
@@ -422,10 +428,18 @@ export const ChapterReader: React.FC = () => {
 
           {/* Chapter Header */}
           <div className="mb-8 border-b border-slate-800 pb-6">
-            <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-2">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-cyan-400 mb-2">
               <span className="uppercase">{currentChapter.displayCategory}</span>
               <span>·</span>
               <span>SECTION {String(currentChapter.number).padStart(2, '0')} OF {CHAPTERS.length}</span>
+              <span>·</span>
+              <span className={`px-2 py-0.5 rounded border text-[10px] font-bold tracking-wider ${
+                currentChapter.sectionType === 'frontmatter'
+                  ? 'bg-amber-950/60 border-amber-500/40 text-amber-300'
+                  : 'bg-cyan-950/60 border-cyan-500/40 text-cyan-300'
+              }`}>
+                {currentChapter.pageRange.toUpperCase()}
+              </span>
             </div>
             <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-100 mb-2 font-sans">
               {currentChapter.title}
@@ -556,7 +570,51 @@ export const ChapterReader: React.FC = () => {
                 );
               }
 
-              // Bullet item rendering
+              // Table of Contents entry rendering
+              if (paragraph.startsWith('- Section ')) {
+                const match = paragraph.match(/^- Section (\d+)\s*·\s*(.*?)\s*\((.*?)\)$/);
+                if (match) {
+                  const sectionNum = parseInt(match[1], 10);
+                  const itemTitle = match[2];
+                  const itemPageRange = match[3];
+                  const isFront = sectionNum <= 4;
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        soundEngine.playClick();
+                        setSelectedChapterNum(sectionNum);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="group/toc flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 my-2 rounded-xl bg-slate-950/60 hover:bg-cyan-950/40 border border-slate-800/80 hover:border-cyan-500/50 cursor-pointer transition-all shadow-sm"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0 group-hover/toc:scale-125 transition-transform shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+                        <span className="font-mono text-xs text-slate-400 group-hover/toc:text-cyan-300 transition-colors shrink-0">
+                          Section {String(sectionNum).padStart(2, '0')}
+                        </span>
+                        <span className="text-sm font-medium text-slate-200 group-hover/toc:text-white transition-colors truncate">
+                          {itemTitle}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                        <span className={`font-mono text-xs px-2.5 py-0.5 rounded-md border font-bold ${
+                          isFront
+                            ? 'bg-amber-950/60 border-amber-500/40 text-amber-300'
+                            : 'bg-cyan-950/70 border-cyan-500/40 text-cyan-300'
+                        }`}>
+                          {itemPageRange}
+                        </span>
+                        <span className="text-[11px] font-mono text-cyan-400 opacity-0 group-hover/toc:opacity-100 transition-opacity hidden sm:inline">
+                          Read →
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+              }
+
+              // Standard bullet item rendering
               if (paragraph.startsWith('- ')) {
                 return (
                   <div key={idx} className="flex items-start gap-3 pl-4 py-1">
@@ -565,6 +623,15 @@ export const ChapterReader: React.FC = () => {
                       {paragraph.replace('- ', '')}
                     </span>
                   </div>
+                );
+              }
+
+              // Indented TOC sub-description item rendering
+              if (paragraph.startsWith('  ')) {
+                return (
+                  <p key={idx} className="pl-9 pr-4 text-xs font-mono text-slate-400 italic -mt-1 mb-2.5 leading-relaxed">
+                    ↳ {paragraph.trim()}
+                  </p>
                 );
               }
 
@@ -606,7 +673,9 @@ export const ChapterReader: React.FC = () => {
                   <ChevronLeft className="w-6 h-6" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Previous Section</div>
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">
+                    Previous Section · {CHAPTERS.find(c => c.number === selectedChapterNum - 1)?.pageRange}
+                  </div>
                   <div className="text-sm font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors truncate">
                     {CHAPTERS.find(c => c.number === selectedChapterNum - 1)?.title}
                   </div>
@@ -625,7 +694,9 @@ export const ChapterReader: React.FC = () => {
                 className="flex-1 group flex items-center justify-end gap-4 p-4 rounded-2xl bg-slate-950/40 border border-slate-800/60 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all text-right"
               >
                 <div className="min-w-0">
-                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Next Section</div>
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">
+                    Next Section · {CHAPTERS.find(c => c.number === selectedChapterNum + 1)?.pageRange}
+                  </div>
                   <div className="text-sm font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors truncate">
                     {CHAPTERS.find(c => c.number === selectedChapterNum + 1)?.title}
                   </div>
