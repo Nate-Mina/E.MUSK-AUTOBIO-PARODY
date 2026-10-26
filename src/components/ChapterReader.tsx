@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CHAPTERS, Chapter } from '../data/chapters';
-import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, BookOpen, User, Quote, Sparkles, ShieldCheck } from 'lucide-react';
+import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, BookOpen, User, Quote, Sparkles, ShieldCheck, Image as ImageIcon, Maximize2, X, Download } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 import { narrateWithElon } from '../utils/ai';
 
@@ -20,6 +20,7 @@ export const ChapterReader: React.FC = () => {
   const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
   const [isContinuousPlaying, setIsContinuousPlaying] = useState<boolean>(false);
   const [ttsSpeed, setTtsSpeed] = useState<number>(1);
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; caption: string } | null>(null);
 
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
   const articleRef = useRef<HTMLElement | null>(null);
@@ -233,16 +234,23 @@ export const ChapterReader: React.FC = () => {
                           </span>
                           <span className="text-xs font-medium truncate">{chap.title}</span>
                         </div>
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleBookmark(chap.number);
-                          }}
-                          className={`p-1 rounded hover:bg-slate-700/50 transition-colors ${
-                            isBookmarked ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'
-                          }`}
-                        >
-                          <Bookmark className="w-3.5 h-3.5 fill-current" />
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {chap.illustration && (
+                            <span title="Features High-Contrast Noir Illustration" className="text-cyan-400/70 group-hover:text-cyan-300 transition-colors p-0.5">
+                              <ImageIcon className="w-3.5 h-3.5" />
+                            </span>
+                          )}
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleBookmark(chap.number);
+                            }}
+                            className={`p-1 rounded hover:bg-slate-700/50 transition-colors ${
+                              isBookmarked ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'
+                            }`}
+                          >
+                            <Bookmark className="w-3.5 h-3.5 fill-current" />
+                          </div>
                         </div>
                       </button>
                     );
@@ -425,6 +433,14 @@ export const ChapterReader: React.FC = () => {
             <p className="text-sm font-mono text-slate-400 italic">
               {currentChapter.subtitle}
             </p>
+            {currentChapter.illustration && (
+              <div className="mt-3 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-950/60 border border-cyan-500/30 w-fit">
+                <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-[11px] font-mono font-medium text-cyan-300">
+                  Includes Neo-Noir Graphic Novel Illustration
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Body Prose with Rich Formatting */}
@@ -450,6 +466,67 @@ export const ChapterReader: React.FC = () => {
                       {subheaderText}
                     </h2>
                   </div>
+                );
+              }
+
+              // Embedded JPG / Image diagram rendering
+              if (paragraph.startsWith('IMAGE: ')) {
+                const parts = paragraph.replace('IMAGE: ', '').split('|').map((s) => s.trim());
+                const imgSrc = parts[0];
+                const imgCaption = parts[1] || '';
+                const isNoirIllustration = imgSrc.includes('/ch') && !imgSrc.includes('ledger');
+
+                return (
+                  <figure
+                    key={idx}
+                    className="my-10 rounded-2xl overflow-hidden border border-cyan-500/40 bg-slate-950 p-4 sm:p-6 shadow-2xl relative group"
+                  >
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800/80">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                        <span className="font-mono text-xs font-bold text-cyan-300 tracking-wider uppercase">
+                          {isNoirIllustration ? 'Graphic Novel Noir Plate' : 'Archival Forensic Diagram'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playClick();
+                          setLightboxImage({ src: imgSrc, caption: imgCaption });
+                        }}
+                        className="text-[11px] font-mono text-slate-400 hover:text-cyan-300 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-500/40 transition-all cursor-pointer"
+                      >
+                        <Maximize2 className="w-3.5 h-3.5" />
+                        <span>Enlarge Scan</span>
+                      </button>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        soundEngine.playClick();
+                        setLightboxImage({ src: imgSrc, caption: imgCaption });
+                      }}
+                      className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900/60 flex items-center justify-center cursor-zoom-in relative group/img"
+                    >
+                      <img
+                        src={imgSrc}
+                        alt={imgCaption}
+                        className="w-full h-auto max-h-[620px] object-contain rounded-lg transition-transform duration-500 group-hover/img:scale-[1.015]"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                        <span className="px-3.5 py-2 rounded-xl bg-slate-900/90 border border-cyan-500/40 text-cyan-300 text-xs font-mono shadow-xl flex items-center gap-2">
+                          <Maximize2 className="w-4 h-4 text-cyan-400" /> Click to Expand Noir Scan
+                        </span>
+                      </div>
+                    </div>
+
+                    {imgCaption && (
+                      <figcaption className="mt-4 text-center font-mono text-xs sm:text-sm text-cyan-300/90 flex items-center justify-center gap-2 px-2">
+                        <span>{imgCaption}</span>
+                      </figcaption>
+                    )}
+                  </figure>
                 );
               }
 
@@ -561,6 +638,75 @@ export const ChapterReader: React.FC = () => {
           </div>
         </article>
       </div>
+
+      {/* Noir Illustration Lightbox Modal */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div
+            className="max-w-6xl w-full bg-slate-950 border border-cyan-500/50 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(6,182,212,0.3)] flex flex-col max-h-[94vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                  <ImageIcon className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider block">
+                    High-Contrast Neo-Noir Archival Scan
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    16:9 Graphic Novel Chiaroscuro Illustration
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={lightboxImage.src}
+                  download
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-mono flex items-center gap-1.5 transition-colors border border-slate-700"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Scan</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setLightboxImage(null);
+                  }}
+                  className="p-2 rounded-xl bg-slate-800 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 transition-colors border border-slate-700 cursor-pointer"
+                  title="Close (Esc)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Image Area */}
+            <div className="flex-1 overflow-auto p-4 sm:p-6 flex items-center justify-center bg-black/80">
+              <img
+                src={lightboxImage.src}
+                alt={lightboxImage.caption}
+                className="max-w-full max-h-[72vh] object-contain rounded-xl border border-slate-800/80 shadow-2xl"
+              />
+            </div>
+
+            {/* Modal Footer Caption */}
+            <div className="p-4 bg-slate-900/95 border-t border-slate-800 text-center">
+              <p className="text-xs sm:text-sm font-mono text-cyan-300/90 max-w-3xl mx-auto">
+                {lightboxImage.caption}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

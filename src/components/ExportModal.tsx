@@ -35,7 +35,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         fileContent += `## ${c.title}\n`;
         fileContent += `*${c.subtitle}*\n\n`;
         c.content.forEach((p) => {
-          if (p.startsWith('SUBHEADER: ')) {
+          if (p.startsWith('IMAGE: ')) {
+            const parts = p.replace('IMAGE: ', '').split('|').map((s) => s.trim());
+            fileContent += `![${parts[1] || 'Figure'}](${parts[0]})\n*${parts[1] || ''}*\n\n`;
+          } else if (p.startsWith('SUBHEADER: ')) {
             fileContent += `### ${p.replace('SUBHEADER: ', '')}\n\n`;
           } else {
             fileContent += `${p}\n\n`;
@@ -57,7 +60,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         fileContent += `${c.subtitle}\n`;
         fileContent += `--------------------------------------------------------------------------------\n\n`;
         c.content.forEach((p) => {
-          if (p.startsWith('SUBHEADER: ')) {
+          if (p.startsWith('IMAGE: ')) {
+            const parts = p.replace('IMAGE: ', '').split('|').map((s) => s.trim());
+            fileContent += `[ FIGURE / DIAGRAM: ${parts[1] || 'Embedded Image'} (${parts[0]}) ]\n\n`;
+          } else if (p.startsWith('SUBHEADER: ')) {
             fileContent += `\n[ ${p.replace('SUBHEADER: ', '').toUpperCase()} ]\n\n`;
           } else {
             fileContent += `${p}\n\n`;

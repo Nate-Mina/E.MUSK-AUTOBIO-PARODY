@@ -81,14 +81,13 @@ export async function generateDocxBlob(): Promise<Blob> {
   );
 
   // 3. Process All Sections (Front Matter, Chapters 1-13, Back Matter)
-  CHAPTERS.forEach((c) => {
+  for (const c of CHAPTERS) {
     // Skip re-rendering Section 1 as raw text since it is already formatted as the formal Title Page above
-    if (c.number === 1) return;
+    if (c.number === 1) continue;
 
     const isChapter = c.sectionType === 'chapter';
-    const headingText = isChapter
-      ? c.title.toUpperCase()
-      : c.title.toUpperCase();
+    const isToc = c.id === 'table-of-contents';
+    const headingText = c.title.toUpperCase();
 
     // Section Header
     children.push(
@@ -102,7 +101,7 @@ export async function generateDocxBlob(): Promise<Blob> {
             bold: true,
             size: 28, // 14pt
             font: 'Arial',
-            color: isChapter ? '003366' : '006644',
+            color: isChapter ? '003366' : isToc ? '004466' : '006644',
           }),
         ],
       }),
@@ -121,8 +120,49 @@ export async function generateDocxBlob(): Promise<Blob> {
     );
 
     // Section Paragraphs
-    c.content.forEach((para) => {
-      if (para.startsWith('SUBHEADER: ')) {
+    for (const para of c.content) {
+      if (para.startsWith('IMAGE: ')) {
+        const parts = para.replace('IMAGE: ', '').split('|').map((s) => s.trim());
+        const imgSrc = parts[0];
+        const imgCaption = parts[1] || '';
+        try {
+          const imgResp = await fetch(imgSrc);
+          if (imgResp.ok) {
+            const imgBuffer = await imgResp.arrayBuffer();
+            children.push(
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 240, after: 120 },
+                children: [
+                  new ImageRun({
+                    data: imgBuffer,
+                    transformation: {
+                      width: 540,
+                      height: 330,
+                    },
+                    type: 'jpg',
+                  }),
+                ],
+              }),
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 240 },
+                children: [
+                  new TextRun({
+                    text: imgCaption,
+                    italics: true,
+                    size: 20, // 10pt
+                    color: '555555',
+                    font: 'Georgia',
+                  }),
+                ],
+              })
+            );
+          }
+        } catch (err) {
+          console.warn('Could not embed chapter image in docx:', err);
+        }
+      } else if (para.startsWith('SUBHEADER: ')) {
         const subheaderTitle = para.replace('SUBHEADER: ', '');
         children.push(
           new Paragraph({
@@ -203,8 +243,8 @@ export async function generateDocxBlob(): Promise<Blob> {
           })
         );
       }
-    });
-  });
+    }
+  }
 
   const doc = new Document({
     sections: [
