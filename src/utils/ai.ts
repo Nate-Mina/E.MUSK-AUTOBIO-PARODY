@@ -75,14 +75,6 @@ export async function narrateWithElon(text: string, persona: string = 'unhinged'
     }
   } catch (e: any) {
     console.error("TTS fetch error:", e);
-    
-    // If it was an explicit server error we already threw, re-throw it
-    if (e.message.startsWith("Server returned") || e.message.includes("Gemini")) {
-      throw e;
-    }
+    throw e;
   }
-
-  // NOTE: Client-side TTS is not implemented as a fallback here 
-  // because it requires the full SDK and heavy configuration.
-  throw new Error("TTS services unavailable (Static/Server Error).");
 }

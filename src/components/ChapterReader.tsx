@@ -127,8 +127,29 @@ export const ChapterReader: React.FC = () => {
       }
     } catch (err: any) {
       console.error('TTS error:', err);
-      setIsContinuousPlaying(false);
-      alert(`[SYSTEM ERROR]: ${err.message || "TTS service unavailable."} Note: TTS requires a backend and may not work on static hosting.`);
+      const isQuotaError = err.message?.includes('429') || err.message?.includes('Quota') || err.message?.includes('RESOURCE_EXHAUSTED');
+      
+      if (isQuotaError && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const speechText = chapterToNarrate.content.slice(0, 4).join(' ');
+        const utterance = new SpeechSynthesisUtterance(speechText);
+        utterance.rate = ttsSpeed;
+        utterance.pitch = 0.9;
+        utterance.onend = () => {
+          if (autoAdvance && isContinuousPlaying) {
+            if (chapterToNarrate.number < CHAPTERS.length) {
+              setSelectedChapterNum(chapterToNarrate.number + 1);
+            } else {
+              setIsContinuousPlaying(false);
+            }
+          }
+        };
+        window.speechSynthesis.speak(utterance);
+        console.warn('Gemini TTS Quota Exceeded (429). Falling back to browser speech synthesis.');
+      } else {
+        setIsContinuousPlaying(false);
+        alert(`[TTS NOTICE]: ${isQuotaError ? "Gemini Free Tier Quota Exceeded (429). Please try again later or configure a paid billing plan." : (err.message || "TTS service unavailable.")}`);
+      }
     } finally {
       setIsNarrating(false);
     }

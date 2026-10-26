@@ -80,21 +80,22 @@ app.post('/api/tts', async (req, res) => {
 
     let enrichedText = text;
     let voiceName = 'Fenrir';
-    let style = 'Smug, unhinged tech billionaire, grandiose dramatic pauses, superior confidence';
+    let style = 'Elon Musk podcast speaking style: hesitant, deliberate, frequent awkward pauses for thought, stammering slightly on technical concepts, signature verbal tics like um, so, yeah, first principles, dry deadpan delivery mixed with messianic grandiosity, and occasional nervous chuckle';
 
+    const cleanedText = text.replace(/\n+/g, ' ');
     if (persona === 'engineer') {
       voiceName = 'Zephyr';
-      style = 'Calm, logical, precise, analytical engineering briefing';
-      enrichedText = `Note: Optimizing narrative structure. <breath> Commencing chapter readout. ${text} |mhm| logic verified.`;
+      style = 'Calm, logical, precise, analytical engineering briefing with Elon cadence';
+      enrichedText = `Um, so... <breath> looking at the physics here. ${cleanedText} |mhm| first principles optimization.`;
     } else if (persona === 'robot') {
       voiceName = 'Charon';
       style = 'Monotone, indifferent, robotic, low-energy AI maintenance log';
       enrichedText = `System: Processing legacy human text. <breath> Reading... ${text} |mhm| task nearly complete. <gasp> error 404 emotion not found.`;
     } else {
-      // Default: unhinged billionaire
+      // Default: Elon Musk podcast persona
       voiceName = 'Fenrir';
-      style = 'Smug, unhinged tech billionaire, grandiose dramatic pauses, superior confidence';
-      enrichedText = `Elon: <breath> First principles analysis. <laugh> Absolutely staggering throughput. ${text} |mhm| total legacy NPC filter removal. <gasp> Pure genius.`;
+      style = 'Elon Musk podcast speaking style: hesitant, deliberate, frequent awkward pauses for thought, stammering slightly on technical concepts, signature verbal tics like um, so, yeah, first principles, dry deadpan delivery mixed with messianic grandiosity, and occasional nervous chuckle';
+      enrichedText = `Um, so, yeah... <breath> looking at this from first principles. <laugh> Like, obviously, extremely hardcore. ${cleanedText} |mhm| total legacy NPC filter removal. <breath> Total optimization.`;
     }
 
     const response = await ai.models.generateContent({
