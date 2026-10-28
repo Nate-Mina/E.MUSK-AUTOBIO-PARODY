@@ -78,24 +78,33 @@ app.post('/api/tts', async (req, res) => {
       return res.status(500).json({ error: 'Server misconfigured: Gemini API Key missing from environment.' });
     }
 
-    let enrichedText = text;
-    let voiceName = 'Fenrir';
-    let style = 'Elon Musk podcast speaking style: hesitant, deliberate, frequent awkward pauses for thought, stammering slightly on technical concepts, signature verbal tics like um, so, yeah, first principles, dry deadpan delivery mixed with messianic grandiosity, and occasional nervous chuckle';
+    // Strip any markdown, image markers, or formatting artifacts from input text
+    const cleanedText = text
+      .replace(/IMAGE:\s*[^|\n]+(?:\|\s*[^\n]+)?/gi, '')
+      .replace(/SUBHEADER:\s*/gi, '')
+      .replace(/https?:\/\/\S+/gi, '')
+      .replace(/[*#_`~]/g, '')
+      .replace(/\|/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-    const cleanedText = text.replace(/\n+/g, ' ');
+    let enrichedText = cleanedText;
+    let voiceName = 'Fenrir';
+    let style = 'Confident, crisp, highly articulate executive delivery. Rapid cadence, crystal-clear enunciation, authoritative tone, minimal pauses, and sharp first-principles intellect without stammering or hesitation.';
+
     if (persona === 'engineer') {
       voiceName = 'Zephyr';
-      style = 'Calm, logical, precise, analytical engineering briefing with Elon cadence';
-      enrichedText = `Um, so... <breath> looking at the physics here. ${cleanedText} |mhm| first principles optimization.`;
+      style = 'Crisp, articulate, fast-paced analytical engineering briefing. Direct, fluent, and precise enunciation with zero hesitation.';
+      enrichedText = cleanedText;
     } else if (persona === 'robot') {
       voiceName = 'Charon';
-      style = 'Monotone, indifferent, robotic, low-energy AI maintenance log';
-      enrichedText = `System: Processing legacy human text. <breath> Reading... ${text} |mhm| task nearly complete. <gasp> error 404 emotion not found.`;
+      style = 'Futuristic high-velocity AI synthesizer, perfectly articulate, crisp, steady, and continuous.';
+      enrichedText = cleanedText;
     } else {
-      // Default: Elon Musk podcast persona
+      // Default: Articulate, fast-paced Elon techno-executive
       voiceName = 'Fenrir';
-      style = 'Elon Musk podcast speaking style: hesitant, deliberate, frequent awkward pauses for thought, stammering slightly on technical concepts, signature verbal tics like um, so, yeah, first principles, dry deadpan delivery mixed with messianic grandiosity, and occasional nervous chuckle';
-      enrichedText = `Um, so, yeah... <breath> looking at this from first principles. <laugh> Like, obviously, extremely hardcore. ${cleanedText} |mhm| total legacy NPC filter removal. <breath> Total optimization.`;
+      style = 'Confident, crisp, highly articulate executive delivery. Rapid cadence, crystal-clear enunciation, authoritative tone, minimal pauses, and sharp first-principles intellect without stammering or hesitation.';
+      enrichedText = cleanedText;
     }
 
     const response = await ai.models.generateContent({
@@ -132,7 +141,12 @@ app.post('/api/tts', async (req, res) => {
     res.json({ audio: base64Audio });
   } catch (error: any) {
     console.error('Gemini TTS Error:', error);
-    res.status(500).json({ error: error.message || 'Internal TTS error' });
+    const isRateLimit = error.status === 429 || error.message?.includes('429') || error.message?.includes('Quota') || error.message?.includes('RESOURCE_EXHAUSTED');
+    const statusCode = isRateLimit ? 429 : 500;
+    res.status(statusCode).json({ 
+      error: isRateLimit ? 'QUOTA_EXHAUSTED' : (error.message || 'Internal TTS error'), 
+      details: error.message 
+    });
   }
 });
 

@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CHAPTERS, Chapter } from '../data/chapters';
-import { Bookmark, Search, Volume2, Play, ChevronLeft, ChevronRight, BookOpen, User, Quote, Sparkles, ShieldCheck, Image as ImageIcon, Maximize2, X, Download } from 'lucide-react';
+import { Bookmark, Search, Volume2, VolumeX, Play, Pause, ChevronLeft, ChevronRight, BookOpen, User, Quote, Sparkles, ShieldCheck, Image as ImageIcon, Maximize2, X, Download, Captions, Square } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 import { narrateWithElon } from '../utils/ai';
 
@@ -15,7 +15,12 @@ export const ChapterReader: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [isNarrating, setIsNarrating] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [isBrowserSpeaking, setIsBrowserSpeaking] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [activeCaptions, setActiveCaptions] = useState<string[]>([]);
+  const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(0);
+  const [showCaptions, setShowCaptions] = useState<boolean>(true);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
   const [isContinuousPlaying, setIsContinuousPlaying] = useState<boolean>(false);
@@ -83,22 +88,74 @@ export const ChapterReader: React.FC = () => {
 
   const currentChapter: Chapter = CHAPTERS.find((c) => c.number === selectedChapterNum) || CHAPTERS[0];
 
+  const extractNarrationData = (chapter: Chapter): { fullText: string; sentences: string[] } => {
+    // Filter out image markers, table pipes, and indented bullets for spoken clarity
+    const cleanParagraphs = chapter.content
+      .filter((line) => {
+        const trimmed = line.trim();
+        return !trimmed.startsWith('IMAGE:') && !trimmed.startsWith('|') && !trimmed.startsWith('  ');
+      })
+      .map((line) => {
+        let t = line.trim();
+        if (t.startsWith('SUBHEADER: ')) {
+          t = t.replace('SUBHEADER: ', '').replace(/^[I|V|X]+\.\s*/, '') + '.';
+        }
+        return t
+          .replace(/[*_#`~]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      })
+      .filter((p) => p.length > 0);
+
+    const intro = `${chapter.title}. ${chapter.subtitle}.`;
+    // Take the intro + first 4 substantial prose paragraphs (rich, crisp, and articulate)
+    const proseBody = cleanParagraphs.slice(0, 4).join(' ');
+    const combined = `${intro} ${proseBody}`.replace(/\s+/g, ' ').trim();
+
+    // Split cleanly into sentences for real-time captions
+    const rawSentences = combined.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) || [combined];
+    const sentences = rawSentences.map((s) => s.trim()).filter((s) => s.length > 0);
+
+    return { fullText: combined, sentences };
+  };
+
+  const stopAudio = () => {
+    soundEngine.playClick();
+    setIsContinuousPlaying(false);
+    setIsPlayingAudio(false);
+    setIsBrowserSpeaking(false);
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
   const handleNarrate = async (targetChapter?: Chapter) => {
     soundEngine.playClick();
     if (isNarrating) return;
     setIsNarrating(true);
     setAudioUrl(null);
+    setIsPlayingAudio(false);
+    setIsBrowserSpeaking(false);
 
     if (activeAudioRef.current) {
       activeAudioRef.current.pause();
       activeAudioRef.current = null;
     }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
 
     const chapterToNarrate = targetChapter || currentChapter;
+    const { fullText, sentences } = extractNarrationData(chapterToNarrate);
+    setActiveCaptions(sentences);
+    setActiveSentenceIndex(0);
 
     try {
-      const summaryText = chapterToNarrate.content.slice(0, 3).join(' ');
-      const audioData = await narrateWithElon(summaryText);
+      const audioData = await narrateWithElon(fullText);
       if (audioData) {
         const binary = atob(audioData);
         const bytes = new Uint8Array(binary.length);
@@ -113,7 +170,19 @@ export const ChapterReader: React.FC = () => {
         audio.playbackRate = ttsSpeed;
         activeAudioRef.current = audio;
 
+        audio.ontimeupdate = () => {
+          if (audio.duration && sentences.length > 0) {
+            const fraction = audio.currentTime / audio.duration;
+            const idx = Math.min(sentences.length - 1, Math.floor(fraction * sentences.length));
+            setActiveSentenceIndex(idx);
+          }
+        };
+
+        audio.onplay = () => setIsPlayingAudio(true);
+        audio.onpause = () => setIsPlayingAudio(false);
+
         audio.onended = () => {
+          setIsPlayingAudio(false);
           if (autoAdvance && isContinuousPlaying) {
             if (chapterToNarrate.number < CHAPTERS.length) {
               setSelectedChapterNum(chapterToNarrate.number + 1);
@@ -124,18 +193,56 @@ export const ChapterReader: React.FC = () => {
         };
 
         await audio.play();
+        setIsPlayingAudio(true);
       }
     } catch (err: any) {
       console.error('TTS error:', err);
-      const isQuotaError = err.message?.includes('429') || err.message?.includes('Quota') || err.message?.includes('RESOURCE_EXHAUSTED');
+      const isQuotaError = err.status === 429 || err.code === 'QUOTA_EXHAUSTED' || err.message?.includes('429') || err.message?.includes('Quota') || err.message?.includes('RESOURCE_EXHAUSTED');
       
       if (isQuotaError && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const speechText = chapterToNarrate.content.slice(0, 4).join(' ');
-        const utterance = new SpeechSynthesisUtterance(speechText);
-        utterance.rate = ttsSpeed;
-        utterance.pitch = 0.9;
+        const utterance = new SpeechSynthesisUtterance(fullText);
+        
+        // Select an articulate English voice
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice =
+          voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Guy') || v.name.includes('David') || v.name.includes('Samantha'))) ||
+          voices.find(v => v.lang.startsWith('en')) ||
+          null;
+        if (preferredVoice) utterance.voice = preferredVoice;
+
+        // Articulate, brisk rate with zero sluggishness
+        utterance.rate = Math.max(1.05, ttsSpeed);
+        utterance.pitch = 1.0;
+
+        setIsBrowserSpeaking(true);
+        setIsPlayingAudio(true);
+
+        // Precompute character offsets to synchronize live captions accurately
+        const offsets: number[] = [];
+        let curr = 0;
+        for (const s of sentences) {
+          const idx = fullText.indexOf(s, curr);
+          offsets.push(idx >= 0 ? idx : curr);
+          curr = (idx >= 0 ? idx : curr) + s.length;
+        }
+
+        utterance.onboundary = (e) => {
+          const charIndex = e.charIndex;
+          let matchedIdx = 0;
+          for (let i = 0; i < offsets.length; i++) {
+            if (charIndex >= offsets[i]) {
+              matchedIdx = i;
+            } else {
+              break;
+            }
+          }
+          setActiveSentenceIndex(matchedIdx);
+        };
+
         utterance.onend = () => {
+          setIsBrowserSpeaking(false);
+          setIsPlayingAudio(false);
           if (autoAdvance && isContinuousPlaying) {
             if (chapterToNarrate.number < CHAPTERS.length) {
               setSelectedChapterNum(chapterToNarrate.number + 1);
@@ -144,11 +251,18 @@ export const ChapterReader: React.FC = () => {
             }
           }
         };
+
+        utterance.onerror = () => {
+          setIsBrowserSpeaking(false);
+          setIsPlayingAudio(false);
+        };
+
         window.speechSynthesis.speak(utterance);
-        console.warn('Gemini TTS Quota Exceeded (429). Falling back to browser speech synthesis.');
+        console.warn('Gemini TTS Quota fallback: Articulate browser speech synthesis engaged.');
       } else {
         setIsContinuousPlaying(false);
-        alert(`[TTS NOTICE]: ${isQuotaError ? "Gemini Free Tier Quota Exceeded (429). Please try again later or configure a paid billing plan." : (err.message || "TTS service unavailable.")}`);
+        setIsPlayingAudio(false);
+        alert(`[TTS NOTICE]: ${isQuotaError ? "Gemini Free Tier Quota Exceeded (429). Now using articulate browser speech fallback." : (err.message || "TTS service unavailable.")}`);
       }
     } finally {
       setIsNarrating(false);
@@ -173,12 +287,7 @@ export const ChapterReader: React.FC = () => {
   };
 
   const stopContinuous = () => {
-    soundEngine.playClick();
-    setIsContinuousPlaying(false);
-    if (activeAudioRef.current) {
-      activeAudioRef.current.pause();
-      activeAudioRef.current = null;
-    }
+    stopAudio();
   };
 
   const filteredChapters = CHAPTERS.filter(
@@ -352,32 +461,61 @@ export const ChapterReader: React.FC = () => {
               <span>Auto-Advance</span>
             </label>
 
-            <button
-              onClick={() => handleNarrate()}
-              disabled={isNarrating}
-              className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
-            >
-              <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
-              {isNarrating && !isContinuousPlaying ? 'Synthesizing...' : 'Narrate Section'}
-            </button>
+            {/* Narration Trigger Buttons */}
+            {isPlayingAudio || isBrowserSpeaking ? (
+              <button
+                onClick={stopAudio}
+                className="px-4 py-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
+              >
+                <Square className="w-3.5 h-3.5 fill-current animate-pulse text-rose-400" />
+                <span>Stop Narration</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => handleNarrate()}
+                disabled={isNarrating}
+                className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
+              >
+                <Volume2 className="w-4 h-4 text-emerald-400" />
+                {isNarrating ? 'Synthesizing...' : 'Narrate Section'}
+              </button>
+            )}
 
             {isContinuousPlaying ? (
               <button
                 onClick={stopContinuous}
-                className="px-4 py-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
               >
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
                 Stop Autoplay
               </button>
             ) : (
               <button
                 onClick={handleNarrateAll}
+                disabled={isNarrating}
                 className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 text-xs font-mono font-medium rounded-xl transition-all flex items-center gap-2 shadow-sm"
               >
                 <Play className="w-4 h-4 text-cyan-400" />
                 Narrate Full Book
               </button>
             )}
+
+            {/* Closed Captions Quick Toggle */}
+            <button
+              onClick={() => {
+                soundEngine.playClick();
+                setShowCaptions(!showCaptions);
+              }}
+              className={`p-2.5 rounded-xl border transition-all text-xs font-mono flex items-center gap-1.5 ${
+                showCaptions
+                  ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                  : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+              title="Toggle Live Subtitles / Closed Captions"
+            >
+              <Captions className="w-4 h-4" />
+              <span className="hidden sm:inline font-bold">CC</span>
+            </button>
 
             <button
               onClick={() => toggleBookmark(currentChapter.number)}
@@ -392,22 +530,112 @@ export const ChapterReader: React.FC = () => {
           </div>
         </div>
 
-        {audioUrl && (
-          <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 animate-pulse">
-                <Volume2 className="w-4 h-4" />
+        {/* Synchronized Closed Captions & Audio Narration HUD */}
+        {(audioUrl || isPlayingAudio || isBrowserSpeaking || isNarrating) && (
+          <div className="bg-slate-950/90 border border-cyan-500/40 rounded-2xl p-4 sm:p-5 shadow-[0_0_40px_rgba(6,182,212,0.15)] backdrop-blur-xl space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                  {isPlayingAudio || isBrowserSpeaking ? (
+                    <Volume2 className="w-5 h-5 animate-pulse" />
+                  ) : (
+                    <VolumeX className="w-5 h-5 text-slate-500" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wide">
+                      {isBrowserSpeaking
+                        ? `Browser Voice Synthesis · Articulate Flow (${ttsSpeed}x)`
+                        : isContinuousPlaying
+                        ? `Continuous Book Autoplay · Section ${selectedChapterNum}/${CHAPTERS.length} (${ttsSpeed}x)`
+                        : `Elon Voice Narration · Rapid Articulation (${ttsSpeed}x)`}
+                    </span>
+                    {(isPlayingAudio || isBrowserSpeaking) && (
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                    )}
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400 block">
+                    Fast-paced technical executive delivery · Crisp enunciation · Zero artificial pauses
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-xs font-mono font-bold text-emerald-300 block">
-                  {isContinuousPlaying
-                    ? `NARRATING SECTION ${selectedChapterNum}/${CHAPTERS.length} (AUTO-ADVANCING @ ${ttsSpeed}x)`
-                    : `ELON VOICE NARRATION READY (@ ${ttsSpeed}x)`}
-                </span>
-                <span className="text-[10px] font-mono text-slate-400">Includes dramatic pauses & satirical commentary</span>
+
+              {/* Action Buttons: Toggle CC & Stop */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setShowCaptions(!showCaptions);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                    showCaptions
+                      ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                      : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-300'
+                  }`}
+                  title="Toggle Closed Captions display"
+                >
+                  <Captions className="w-4 h-4" />
+                  <span>CC {showCaptions ? 'ON' : 'OFF'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={stopAudio}
+                  className="px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30 text-xs font-mono font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Stop playback"
+                >
+                  <Square className="w-3.5 h-3.5 fill-current" />
+                  <span>Stop</span>
+                </button>
               </div>
             </div>
-            <audio controls src={audioUrl} className="h-10 accent-emerald-500" />
+
+            {/* Standard HTML5 Audio Controller if wav audio was generated */}
+            {audioUrl && (
+              <div className="flex items-center gap-3">
+                <audio
+                  controls
+                  src={audioUrl}
+                  className="w-full h-9 accent-cyan-400 rounded-lg filter drop-shadow"
+                  ref={(node) => {
+                    if (node && !activeAudioRef.current) {
+                      activeAudioRef.current = node;
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Live Synchronized Closed Captions Bar */}
+            {showCaptions && activeCaptions.length > 0 && (
+              <div className="bg-slate-900/90 border border-cyan-500/30 rounded-xl p-4 shadow-inner space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-mono text-cyan-400">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="font-bold tracking-wider">LIVE NARRATION CLOSED CAPTIONS</span>
+                  </div>
+                  <span className="text-slate-500 font-mono text-[10px]">
+                    Cadence Sentence {activeSentenceIndex + 1} of {activeCaptions.length}
+                  </span>
+                </div>
+
+                {/* Active Spoken Sentence with glowing highlight */}
+                <div className="p-3.5 bg-black/70 rounded-lg border border-slate-800/80 min-h-[75px] flex items-center">
+                  <p className="text-sm sm:text-base font-sans leading-relaxed transition-all">
+                    <span className="text-cyan-200 font-semibold bg-cyan-950/80 px-2.5 py-1 rounded-md border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.25)] mr-2 inline-block">
+                      {activeCaptions[activeSentenceIndex] || activeCaptions[0]}
+                    </span>
+                    {activeSentenceIndex + 1 < activeCaptions.length && (
+                      <span className="text-slate-500 text-xs sm:text-sm font-normal">
+                        {activeCaptions.slice(activeSentenceIndex + 1, activeSentenceIndex + 3).join(' ')}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -557,8 +785,12 @@ export const ChapterReader: React.FC = () => {
                     </div>
 
                     {imgCaption && (
-                      <figcaption className="mt-4 text-center font-mono text-xs sm:text-sm text-cyan-300/90 flex items-center justify-center gap-2 px-2">
-                        <span>{imgCaption}</span>
+                      <figcaption className="mt-4 p-3.5 rounded-xl bg-slate-900/90 border border-cyan-500/30 text-center font-mono text-xs sm:text-sm text-cyan-300 shadow-md flex flex-col sm:flex-row items-center justify-center gap-2.5 px-4 backdrop-blur-md">
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-bold tracking-wider shrink-0 uppercase border border-cyan-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                          <span>PLATE ARCHIVE</span>
+                        </div>
+                        <span className="leading-snug text-slate-200">{imgCaption}</span>
                       </figcaption>
                     )}
                   </figure>

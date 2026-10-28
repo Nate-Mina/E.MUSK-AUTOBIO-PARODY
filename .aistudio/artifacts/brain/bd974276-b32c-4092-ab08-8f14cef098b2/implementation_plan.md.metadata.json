@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan for expanding all 13 manuscript chapters to a minimum of 10 pages each with heavy satirical emphasis on ego clashes, media feuds, and boardroom wars; inserting a dedicated classic Table of Contents in the front matter immediately after the Title Page; and replacing Chapter 5's plaintext settlement table with a high-contrast corporate forensic audit ledger JPG embedded seamlessly in both the web reader and .docx exports.",
-  "updatedAt":  "2026-10-26T00:08:06.209814007Z",
+  "summary":  "Comprehensive architectural plan to implement EPUB3 (.epub) export and Amazon Kindle Create companion package (.kpf / .zip) export with full embedded noir illustrations, interactive Roman-numeral front matter TOC, and Kindle Direct Publishing assets.",
+  "updatedAt":  "2026-10-27T23:33:32.586524666Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

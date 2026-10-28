@@ -71,7 +71,10 @@ export async function narrateWithElon(text: string, persona: string = 'unhinged'
     } else {
       const errorData = await response.json().catch(() => ({}));
       console.warn(`Server TTS proxy returned status ${response.status}:`, errorData);
-      throw new Error(errorData.error || `Server returned ${response.status}`);
+      const err: any = new Error(errorData.details || errorData.error || `Server returned ${response.status}`);
+      err.status = response.status;
+      err.code = errorData.error;
+      throw err;
     }
   } catch (e: any) {
     console.error("TTS fetch error:", e);
