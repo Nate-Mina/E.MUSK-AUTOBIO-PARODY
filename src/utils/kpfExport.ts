@@ -121,6 +121,15 @@ export async function generateKindlePackageBlob(): Promise<Blob> {
             html += `  <div class="figure">\n    <img src="../images/${parts[0].split('/').pop()}" alt="${parts[1] || ''}" />\n    <div class="caption">${parts[1] || ''}</div>\n  </div>\n`;
           } else if (p.startsWith('SUBHEADER: ')) {
             html += `  <h2>${p.replace('SUBHEADER: ', '')}</h2>\n`;
+          } else if (p.startsWith('|') && p.includes('|')) {
+            const cols = p.split('|').map((s) => s.trim()).filter(Boolean);
+            const isHeader = p.toLowerCase().includes('category') || p.toLowerCase().includes('entity');
+            const isTotal = p.toLowerCase().includes('total');
+            html += `  <div style="font-family: monospace; font-size: 0.85em; border-bottom: 1px solid #ddd; padding: 0.25rem 0; ${isHeader || isTotal ? 'font-weight: bold;' : ''}">\n`;
+            cols.forEach((col) => {
+              html += `    <span style="display: inline-block; margin-right: 1rem;">${col}</span>\n`;
+            });
+            html += `  </div>\n`;
           } else if (p.startsWith('- ')) {
             html += `  <p>• ${p.replace('- ', '')}</p>\n`;
           } else if (p.includes('=') && (p.includes('/') || p.includes('^') || p.includes('-'))) {

@@ -803,18 +803,36 @@ export const ChapterReader: React.FC = () => {
                 if (isHeaderSeparator) return null;
                 const columns = paragraph.split('|').map((col) => col.trim()).filter(Boolean);
                 const isHeader = paragraph.toLowerCase().includes('category') || paragraph.toLowerCase().includes('entity');
+                const isTotal = paragraph.toLowerCase().includes('total');
 
                 return (
-                  <div key={idx} className="overflow-x-auto my-2">
+                  <div key={idx} className="overflow-x-auto my-1.5">
                     <div
-                      className={`grid grid-cols-4 gap-4 p-3 rounded-xl border font-mono text-xs ${
+                      className={`grid grid-cols-1 md:grid-cols-4 gap-3 p-3.5 rounded-xl border font-mono text-xs transition-all ${
                         isHeader
-                          ? 'bg-cyan-950/40 border-cyan-800/60 text-cyan-300 font-bold'
-                          : 'bg-slate-950/60 border-slate-800/60 text-slate-300 hover:border-cyan-500/30'
+                          ? 'bg-cyan-950/60 border-cyan-500/50 text-cyan-300 font-bold uppercase tracking-wider text-[11px] shadow-sm'
+                          : isTotal
+                          ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 font-bold shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                          : 'bg-slate-950/70 border-slate-800/80 text-slate-300 hover:border-cyan-500/40 hover:bg-slate-900/60'
                       }`}
                     >
                       {columns.map((col, cIdx) => (
-                        <div key={cIdx} className={cIdx === 2 ? 'text-amber-300 font-bold' : ''}>
+                        <div
+                          key={cIdx}
+                          className={`${
+                            cIdx === 0
+                              ? isTotal
+                                ? 'text-emerald-300 font-bold'
+                                : 'text-slate-100 font-semibold'
+                              : cIdx === 2
+                              ? isTotal
+                                ? 'text-emerald-300 font-extrabold text-sm'
+                                : 'text-amber-300 font-bold'
+                              : cIdx === 3
+                              ? 'text-cyan-400 text-[11px]'
+                              : 'text-slate-400'
+                          }`}
+                        >
                           {col}
                         </div>
                       ))}

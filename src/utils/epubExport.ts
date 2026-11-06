@@ -337,7 +337,19 @@ ul.bullet-list li {
           bodyHtml += `</ul>\n`;
           inBulletList = false;
         }
-        bodyHtml += `<p style="margin-left: 2em; font-size: 0.9em; font-style: italic; color: #555;">${escapeXml(para.trim())}</p>\n`;
+      } else if (para.startsWith('|') && para.includes('|')) {
+        if (inBulletList) {
+          bodyHtml += `</ul>\n`;
+          inBulletList = false;
+        }
+        const cols = para.split('|').map((s) => s.trim()).filter(Boolean);
+        const isHeader = para.toLowerCase().includes('category') || para.toLowerCase().includes('entity');
+        const isTotal = para.toLowerCase().includes('total');
+        bodyHtml += `<div class="ledger-row" style="margin:0.25rem 0; font-family:monospace; font-size:0.85em; border-bottom:1px solid #ccc; padding:0.25rem 0; ${isHeader ? 'font-weight:bold; color:#0b1f3a;' : isTotal ? 'font-weight:bold; color:#0d3b66;' : ''}">\n`;
+        cols.forEach((c) => {
+          bodyHtml += `  <span style="display:inline-block; margin-right:1rem;">${escapeXml(c)}</span>\n`;
+        });
+        bodyHtml += `</div>\n`;
       } else if (para.includes('=') && (para.includes('/') || para.includes('^') || para.includes('-'))) {
         if (inBulletList) {
           bodyHtml += `</ul>\n`;
